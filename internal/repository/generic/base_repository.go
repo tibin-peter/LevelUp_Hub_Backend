@@ -1,6 +1,10 @@
 package generic
 
-import "gorm.io/gorm"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
 
 //for reuse basic crud
 type Repository[T any] struct {
@@ -18,10 +22,15 @@ func (r *Repository[T])Create(entity *T)error{
 }
 
 //finc by id
-func (r *Repository[T])FindById(id uint)(*T,error){
-  var entity T
-	err:=r.db.First(&entity,id).Error
-	return &entity,err
+func (r *Repository[T]) FindById(id uint) (*T, error) {
+	var entity T
+	err := r.db.First(&entity, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &entity, err
 }
 
 //for findall

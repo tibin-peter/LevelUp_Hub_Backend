@@ -13,6 +13,7 @@ type Config struct {
 	DBUrl     string
 	RedisAddr string
 	JWTSecret string
+
 }
 
 func LeadConfig() *Config {
@@ -51,6 +52,6 @@ func LeadConfig() *Config {
 		AppPort: os.Getenv("APP_PORT"),
 		DBUrl: dbUrl,
 		RedisAddr: os.Getenv("REDIS_ADDR"),
-		JWTSecret: os.Getenv("JWT_SECTET"),
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 }

@@ -1,4 +1,4 @@
-package user
+package profile
 
 import "time"
 
@@ -21,4 +21,19 @@ type OTP struct {
 	Email     string
 	Code      string
 	ExpiresAt time.Time
+}
+
+//mentor details table
+type MentorProfile struct{
+	ID    uint `gorm:"primaryKey"`
+	UserID  uint `gorm:"uniqueIndex;not null"`
+	Bio string `gorm:"type:text"`
+	Skills string `gorm:"type:text"`
+	Languages string `gorm:"type:text"`
+	HourlyPrice     float64 `gorm:"not null"`
+	ExperienceYears int     `gorm:"not null"`
+	RatingAvg    float64 `gorm:"default:0"`
+	TotalReviews int     `gorm:"default:0"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

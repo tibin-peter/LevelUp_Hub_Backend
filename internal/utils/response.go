@@ -2,12 +2,20 @@ package utils
 
 import "github.com/gofiber/fiber/v2"
 
-//func for success response
-func JSONSucess(c *fiber.Ctx,data interface{})error{
-	return c.JSON(fiber.Map{
-		"success":true,
-		"data":data,
-	})
+
+// Define a standard response struct
+type Response struct {
+    Success bool        `json:"success"`
+    Message string      `json:"message"`
+    Data    interface{} `json:"data,omitempty"` // omitempty hides the field if data is nil
+}
+
+func JSONSucess(c *fiber.Ctx, message string, data interface{}) error {
+    return c.JSON(Response{
+        Success: true,
+        Message: message,
+        Data:    data,
+    })
 }
 
 //func for error response

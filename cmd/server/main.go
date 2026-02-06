@@ -2,10 +2,11 @@ package main
 
 import (
 	"LevelUp_Hub_Backend/internal/config"
-	"LevelUp_Hub_Backend/internal/modules/user"
+	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
 	"LevelUp_Hub_Backend/internal/platform/redis"
 	"LevelUp_Hub_Backend/internal/routes"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,9 +22,12 @@ func main() {
 		log.Fatal("Postgres connection failed:",err)
 	}
 	//run migrations
-	db.AutoMigrate(
-		&user.User{},
-	)
+	if err:=db.AutoMigrate(
+		&profile.User{},
+		&profile.MentorProfile{},
+	);err!=nil{
+		log.Fatal(err)
+	}
 
 	// Connect Redis
 	rdb, err := redis.NewRedisClient(cfg)
@@ -35,8 +39,16 @@ func main() {
 	// Create Fiber app
 	app := fiber.New()
 
+	//for frontend connect
+	app.Use(cors.New(cors.Config{
+    AllowOrigins: "http://localhost:5173",
+    AllowMethods: "GET,POST,PUT,DELETE",
+    AllowHeaders: "Origin, Content-Type, Accept",
+    AllowCredentials: true,
+}))
+
 	//setup routes
-	routes.SetUp(app,db)
+	routes.SetUp(app,db,rdb,cfg.JWTSecret)
 
 	// Health check route
 	app.Get("/", func(c *fiber.Ctx) error {
