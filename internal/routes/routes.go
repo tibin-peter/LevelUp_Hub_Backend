@@ -2,6 +2,7 @@ package routes
 
 import (
 	"LevelUp_Hub_Backend/internal/modules/auth"
+	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,4 +22,5 @@ func SetUp(
 	//module routes
 	profile.RegisterRoutes(api,db,jwtSecret)
 	auth.RegisterRoutes(api,db,rdb,jwtSecret)
+	mentordiscovery.RegisterRoutes(api,db)
 }

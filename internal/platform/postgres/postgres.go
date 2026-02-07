@@ -15,6 +15,7 @@ func NewPostgresConnection(cfg *config.Config)(*gorm.DB,error){
 	if err!=nil{
 		return nil,err
 	}
+	db.Debug()
 
 	sqlDB,err:=db.DB()
 	if err!=nil{
