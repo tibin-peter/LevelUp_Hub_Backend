@@ -2,6 +2,7 @@ package routes
 
 import (
 	"LevelUp_Hub_Backend/internal/modules/auth"
+	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 
@@ -23,4 +24,5 @@ func SetUp(
 	profile.RegisterRoutes(api,db,jwtSecret)
 	auth.RegisterRoutes(api,db,rdb,jwtSecret)
 	mentordiscovery.RegisterRoutes(api,db)
+	courses.RegisterRoutes(api,db,jwtSecret)
 }

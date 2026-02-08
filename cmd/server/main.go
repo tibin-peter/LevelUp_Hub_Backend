@@ -2,12 +2,14 @@ package main
 
 import (
 	"LevelUp_Hub_Backend/internal/config"
+	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
 	"LevelUp_Hub_Backend/internal/platform/redis"
 	"LevelUp_Hub_Backend/internal/routes"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"log"
+
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,6 +27,8 @@ func main() {
 	if err:=db.AutoMigrate(
 		&profile.User{},
 		&profile.MentorProfile{},
+		&courses.Course{},
+		&courses.MentorCourse{},
 	);err!=nil{
 		log.Fatal(err)
 	}
