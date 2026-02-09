@@ -1,6 +1,9 @@
 package profile
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Service interface {
 	GetUserById(id uint) (*User, error)
@@ -12,7 +15,7 @@ type Service interface {
 	CrateMentorProfile(userID uint,input MentorProfileInput)(*MentorProfile, error)
 	GetMentorProfileByUserID(userID uint) (*MentorProfile, error)
 	UpdateMentorProfile(userID uint, input MentorProfileInput) (*MentorProfile, error)
-	GetPublicMentorProfile(mentorID uint) (*MentorProfile, error)
+	GetPublicMentorProfile(mentorID uint) (*MentorProfileResponse, error)
 }
 
 type service struct {
@@ -130,10 +133,13 @@ func (s *service) UpdateMentorProfile(userID uint, input MentorProfileInput) (*M
 }
 
 //getpublic mentor profile
-func (s *service) GetPublicMentorProfile(mentorID uint) (*MentorProfile, error) {
-	profile, err := s.mentorrepo.FindMentorByID(mentorID)
+func (s *service) GetPublicMentorProfile(mentorID uint) (*MentorProfileResponse, error) {
+	profile, err := s.mentorrepo.FindMentorByIDPublic(mentorID)
 	if err != nil {
 		return nil, err
+	}
+	if profile==nil{
+		return nil,errors.New("mentor not found")
 	}
 
 	return profile, nil

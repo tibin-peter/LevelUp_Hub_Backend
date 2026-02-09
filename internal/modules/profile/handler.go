@@ -2,6 +2,8 @@ package profile
 
 import (
 	"LevelUp_Hub_Backend/internal/utils"
+	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -106,7 +108,7 @@ func (h *Handler) CreateMentorProfile(c *fiber.Ctx) error {
 	return utils.JSONSucess(c,"mentor profile created",profile)
 }
 
-//get mentor profile
+//get mentor profile for mentor
 func (h *Handler) GetMentorProfile(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(uint)
 
@@ -135,14 +137,16 @@ func (h *Handler) UpdateMentorProfile(c *fiber.Ctx) error {
 	return utils.JSONSucess(c,"profile updated",profile)
 }
 
-//get public mentor profile
+//get public mentor profile for student
 func (h *Handler) GetPublicMentorProfile(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
+	fmt.Println("mentor id ",id)
 	if err != nil {
 		return utils.JSONError(c,400,"invalid id")
 	}
-
+  log.Println("log called")
 	profile, err := h.service.GetPublicMentorProfile(uint(id))
+	log.Println("mentordata",profile)
 	if err != nil {
 		return utils.JSONError(c,404,"mentor not found")
 	}

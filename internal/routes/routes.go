@@ -5,6 +5,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
 	"LevelUp_Hub_Backend/internal/modules/profile"
+	"LevelUp_Hub_Backend/internal/modules/slot"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
@@ -25,4 +26,5 @@ func SetUp(
 	auth.RegisterRoutes(api,db,rdb,jwtSecret)
 	mentordiscovery.RegisterRoutes(api,db)
 	courses.RegisterRoutes(api,db,jwtSecret)
+	slot.RegisterRoutes(api,db,jwtSecret)
 }

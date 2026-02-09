@@ -12,6 +12,7 @@ type MentorRepository interface {
 	FindMentorByUserID(userID uint) (*MentorProfile, error)
 	FindMentorByID(id uint) (*MentorProfile, error)
 	UpdateMentor(profile *MentorProfile) error
+	FindMentorByIDPublic(userID uint) (*MentorProfileResponse, error)
 }
 
 type mentorRepo struct {
@@ -47,4 +48,35 @@ func (r *mentorRepo) FindMentorByID(id uint) (*MentorProfile, error) {
 
 func (r *mentorRepo) UpdateMentor(profile *MentorProfile) error {
 	return r.base.Update(profile)
+}
+
+func (r *mentorRepo) FindMentorByIDPublic(mentorID uint) (*MentorProfileResponse, error) {
+
+	var result MentorProfileResponse
+
+	err := r.db.
+		Table("mentor_profiles").
+		Select(`
+			mentor_profiles.id,
+			mentor_profiles.user_id,
+			users.name,
+			mentor_profiles.bio,
+			mentor_profiles.skills,
+			mentor_profiles.languages,
+			mentor_profiles.hourly_price,
+			mentor_profiles.experience_years,
+			mentor_profiles.rating_avg,
+			mentor_profiles.total_reviews,
+			mentor_profiles.created_at,
+			mentor_profiles.updated_at
+		`).
+		Joins("JOIN users ON users.id = mentor_profiles.user_id").
+		Where("mentor_profiles.id = ?", mentorID).
+		First(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

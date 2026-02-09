@@ -27,10 +27,11 @@ func NewRepository(db *gorm.DB) Repository {
 }
 
 //struct for mentor course and user related info
-type MentorWithUser struct {
+type MentorWithUser struct {   
 	UserID        uint
 	Name          string
 	ProfilePicURL string
+	ID            uint
 	Bio           string
 	HourlyPrice   float64
 	RatingAvg     float64
@@ -136,6 +137,7 @@ func (r *repo) GetMentorsByCourse(courseID uint) ([]MentorWithUser, error) {
 						u.id as user_id,
 						u.name,
 						u.profile_Pic_url,
+						mp.id as id,
 						mp.bio,
 						mp.hourly_price,
 						mp.rating_avg

@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+//for jwt authentication
 func AuthMiddleware(JWTSecret string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		//read cookie
