@@ -15,6 +15,8 @@ type Repository interface {
 	HasOverlap(mentorID uint, start time.Time, end time.Time) (bool, error)
 	GetSlotsByDate(mentorID uint,date time.Time,) ([]MentorSlot, error)
 	GetProfileIDByUserID(userID uint) (uint, error)
+	GetByID(id uint) (*MentorSlot, error)
+  MarkBooked(slotID uint, booked bool) error
 }
 
 type repo struct {
@@ -107,4 +109,16 @@ func (r *repo) GetProfileIDByUserID(userID uint) (uint, error) {
 		First(&profile).Error
 
 	return profile.ID, err
+}
+
+func (r *repo) GetByID(id uint) (*MentorSlot, error) {
+    var slot MentorSlot
+    err := r.db.First(&slot, id).Error
+    return &slot, err
+}
+
+func (r *repo) MarkBooked(id uint, booked bool) error {
+    return r.db.Model(&MentorSlot{}).
+        Where("id = ?", id).
+        Update("is_booked", booked).Error
 }
