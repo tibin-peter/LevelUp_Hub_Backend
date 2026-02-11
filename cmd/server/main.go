@@ -4,6 +4,7 @@ import (
 	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/courses"
+	"LevelUp_Hub_Backend/internal/modules/message"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
@@ -33,6 +34,8 @@ func main() {
 		&courses.MentorCourse{},
 		&slot.MentorSlot{},
 		&booking.Booking{},
+		&message.Conversation{},
+		&message.Message{},
 	);err!=nil{
 		log.Fatal(err)
 	}

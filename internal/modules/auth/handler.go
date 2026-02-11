@@ -54,7 +54,7 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		Value: access,
 		HTTPOnly: true,
 		SameSite: "Lax",
-		MaxAge: 900,
+		MaxAge: 7*24*3600,
 	})
 
 	c.Cookie(&fiber.Cookie{
@@ -95,7 +95,7 @@ func(h *Handler)Login(c *fiber.Ctx)error{
 		Value: access,
 		HTTPOnly: true,
 		SameSite: "Lax",
-		MaxAge: 900,
+		MaxAge: 7*24*3600,
 	})
 
 	c.Cookie(&fiber.Cookie{
@@ -133,7 +133,7 @@ func (h *Handler)Refresh(c *fiber.Ctx)error{
 		Value: access,
 		HTTPOnly: true,
 		SameSite: "Lax",
-		MaxAge: 900,
+		MaxAge: 7*24*3600,
 	})
 
 	c.Cookie(&fiber.Cookie{
