@@ -6,6 +6,7 @@ import "time"
 type Course struct {
 	ID          uint      `gorm:"primaryKey"`
 	Title       string    `gorm:"type:varchar(150);not null"`
+	ImageURL    string
 	Description string    `gorm:"type:text"`
 	Category    string    `gorm:"type:varchar(100);index"`
 	Level       string    `gorm:"type:varchar(50)"`

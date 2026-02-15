@@ -5,6 +5,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/message"
+	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
@@ -36,6 +37,10 @@ func main() {
 		&booking.Booking{},
 		&message.Conversation{},
 		&message.Message{},
+		&payment.Payment{},
+		&payment.Wallet{},
+		&payment.WalletTransaction{},
+		&payment.WithdrawRequest{},
 	);err!=nil{
 		log.Fatal(err)
 	}
@@ -59,7 +64,7 @@ func main() {
 }))
 
 	//setup routes
-	routes.SetUp(app,db,rdb,cfg.JWTSecret)
+	routes.SetUp(app,db,rdb,cfg.JWTSecret,cfg.RazorpayClient,cfg.RazorpayKey)
 
 	// Health check route
 	app.Get("/", func(c *fiber.Ctx) error {

@@ -50,29 +50,34 @@ func (r *repo) CreateMessage(m *Message) error {
 }
 
 func (r *repo) ListUserConversations(userID uint) ([]ConversationWithLastMsg, error) {
-
 	var result []ConversationWithLastMsg
-
 	err := r.db.Raw(`
-	SELECT 
-		c.id as conversation_id,
-		CASE 
-			WHEN c.user1_id = ? THEN c.user2_id
-			ELSE c.user1_id
-		END as other_user_id,
-		m.content as last_message,
-		m.created_at as last_time
-	FROM conversations c
-	LEFT JOIN messages m 
-		ON m.id = (
+		SELECT 
+			c.id as conversation_id,
+			CASE 
+				WHEN c.user1_id = ? THEN c.user2_id
+				ELSE c.user1_id
+			END as other_user_id,
+			u.name as other_user_name,
+			u.profile_pic_url as other_profile_pic,
+			m.content as last_message,
+			m.created_at as last_time
+		FROM conversations c
+		INNER JOIN users u ON u.id = (
+			CASE 
+				WHEN c.user1_id = ? THEN c.user2_id
+				ELSE c.user1_id
+			END
+		)
+		LEFT JOIN messages m ON m.id = (
 			SELECT id FROM messages 
 			WHERE conversation_id = c.id
-			ORDER BY created_at DESC
+			ORDER BY created_at DESC 
 			LIMIT 1
 		)
-	WHERE c.user1_id = ? OR c.user2_id = ?
-	ORDER BY m.created_at DESC
-	`, userID, userID, userID).
+		WHERE c.user1_id = ? OR c.user2_id = ?
+		ORDER BY COALESCE(m.created_at, c.created_at) DESC
+	`, userID, userID, userID, userID).
 	Scan(&result).Error
 
 	return result, err

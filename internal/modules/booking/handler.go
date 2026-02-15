@@ -18,25 +18,23 @@ func NewHandler(s Service) *Handler {
 
 //student side func
 
-
 func (h *Handler) CreateBooking(c *fiber.Ctx) error {
+    userID := c.Locals("userID").(uint)
+    var req CreateBookingRequest
+    if err := c.BodyParser(&req); err != nil {
+        return utils.JSONError(c, 400, "invalid input")
+    }
 
-	userID := c.Locals("userID").(uint)
+    // Capture the returned booking object
+    booking, err := h.service.CreateBooking(userID, req.SlotID)
+    if err != nil {
+        return utils.JSONError(c, 400, err.Error())
+    }
 
-	var req CreateBookingRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.JSONError(c,400,"invalid input")
-	}
-	if req.SlotID == 0 {
-		return utils.JSONError(c, 400, "slot_id required")
-	}
-
-	err := h.service.CreateBooking(userID, req.SlotID)
-	if err != nil {
-		return utils.JSONError(c,400,err.Error())
-	}
-
-	return utils.JSONSucess(c,"booking requested",nil)
+    // Return the booking ID so frontend can call POST /payments/order
+    return utils.JSONSucess(c, "booking ready for payment", fiber.Map{
+        "booking_id": booking.ID,
+    })
 }
 
 func (h *Handler) GetStudentUpcoming(c *fiber.Ctx) error {

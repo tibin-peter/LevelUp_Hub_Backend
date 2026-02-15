@@ -1,7 +1,5 @@
 package courses
 
-
-
 //struct for filter
 type CourseFilter struct {
 	Search   string `query:"search"`
@@ -21,8 +19,8 @@ type CourseListQuery struct {
 }
 
 //update course details
-type UpdateMentorCoursesRequest struct {
-	CourseIDs []uint `json:"course_ids"`
+type AddMentorCourseRequest struct {
+	CourseID uint `json:"course_id" validate:"required"`
 }
 
 //dto for response

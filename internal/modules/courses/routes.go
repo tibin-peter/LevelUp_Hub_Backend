@@ -21,7 +21,7 @@ func RegisterRoutes(app fiber.Router, db *gorm.DB,jwtSecret string) {
 
 	mentor := app.Group("/mentor", middleware.AuthMiddleware(jwtSecret))
 
-	mentor.Post("/courses", handler.UpdateMentorCourses)
+	mentor.Post("/courses", handler.AddMentorCourse)
 	mentor.Get("/courses", handler.GetMentorCourses)
 
 }

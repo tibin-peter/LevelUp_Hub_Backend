@@ -15,6 +15,8 @@ type SendWSMessage struct {
 type ConversationWithLastMsg struct {
 	ConversationID uint
 	OtherUserID    uint
+	OtherUserName  string    
+	OtherProfilePic string
 	LastMessage    string
 	LastTime       *time.Time
 }

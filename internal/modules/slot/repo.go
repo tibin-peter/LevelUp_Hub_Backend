@@ -13,10 +13,10 @@ type Repository interface {
 	GetAvailableSlotsByMentor(mentoID uint) ([]MentorSlot, error)
 	DeleteSlot(slotID uint, mentorID uint) error
 	HasOverlap(mentorID uint, start time.Time, end time.Time) (bool, error)
-	GetSlotsByDate(mentorID uint,date time.Time,) ([]MentorSlot, error)
+	GetSlotsByDate(mentorID uint, date time.Time) ([]MentorSlot, error)
 	GetProfileIDByUserID(userID uint) (uint, error)
 	GetByID(id uint) (*MentorSlot, error)
-  MarkBooked(slotID uint, booked bool) error
+	MarkBooked(slotID uint, booked bool) error
 }
 
 type repo struct {
@@ -31,12 +31,12 @@ func NewRepository(db *gorm.DB) Repository {
 	}
 }
 
-//create slot
+// create slot
 func (r *repo) CreateSlot(slot *MentorSlot) error {
 	return r.base.Create(slot)
 }
 
-//get slots by mentor
+// get slots by mentor
 func (r *repo) GetSlotsByMentor(mentorID uint) ([]MentorSlot, error) {
 	var slots []MentorSlot
 	err := r.db.Where("mentor_profile_id = ?", mentorID).
@@ -45,7 +45,7 @@ func (r *repo) GetSlotsByMentor(mentorID uint) ([]MentorSlot, error) {
 	return slots, err
 }
 
-//get availabel slots by mentor
+// get availabel slots by mentor
 func (r *repo) GetAvailableSlotsByMentor(mentoID uint) ([]MentorSlot, error) {
 	var slots []MentorSlot
 
@@ -61,13 +61,13 @@ func (r *repo) GetAvailableSlotsByMentor(mentoID uint) ([]MentorSlot, error) {
 	return slots, err
 }
 
-//for delete slot
+// for delete slot
 func (r *repo) DeleteSlot(slotID uint, mentorProfileID uint) error {
 	return r.db.Where("id = ? AND mentor_profile_id = ?", slotID, mentorProfileID).
 		Delete(&MentorSlot{}).Error
 }
 
-//for prevent overlap
+// for prevent overlap
 func (r *repo) HasOverlap(mentorID uint, start time.Time, end time.Time) (bool, error) {
 	var count int64
 
@@ -81,8 +81,8 @@ func (r *repo) HasOverlap(mentorID uint, start time.Time, end time.Time) (bool, 
 	return count > 0, err
 }
 
-//get by date
-func (r *repo) GetSlotsByDate(mentorID uint,date time.Time,) ([]MentorSlot, error) {
+// get by date
+func (r *repo) GetSlotsByDate(mentorID uint, date time.Time) ([]MentorSlot, error) {
 
 	var slots []MentorSlot
 
@@ -112,13 +112,16 @@ func (r *repo) GetProfileIDByUserID(userID uint) (uint, error) {
 }
 
 func (r *repo) GetByID(id uint) (*MentorSlot, error) {
-    var slot MentorSlot
-    err := r.db.First(&slot, id).Error
-    return &slot, err
+	var slot MentorSlot
+	err := r.db.First(&slot, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &slot, nil
 }
 
 func (r *repo) MarkBooked(id uint, booked bool) error {
-    return r.db.Model(&MentorSlot{}).
-        Where("id = ?", id).
-        Update("is_booked", booked).Error
+	return r.db.Model(&MentorSlot{}).
+		Where("id = ?", id).
+		Update("is_booked", booked).Error
 }

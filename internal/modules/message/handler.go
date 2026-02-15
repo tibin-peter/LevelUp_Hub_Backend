@@ -27,7 +27,7 @@ func (h *Handler) HandleWS(c *websocket.Conn,userID uint){
 
 	ok,_ := h.service.IsUserInConversation(cid,userID)
 	if !ok { 
-        fmt.Println("❌ Access Denied for user", userID)
+        fmt.Println(" access Denied for user", userID)
         c.Close()
         return 
     }

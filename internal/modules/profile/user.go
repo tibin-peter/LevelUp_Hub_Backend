@@ -24,17 +24,21 @@ type OTP struct {
 }
 
 //mentor details table
-type MentorProfile struct{
-	ID    uint `gorm:"primaryKey"`
-	UserID  uint `gorm:"uniqueIndex;not null"`
-	Bio string `gorm:"type:text"`
-	Skills string `gorm:"type:text"`
-	Languages string `gorm:"type:text"`
+type MentorProfile struct {
+	ID              uint    `gorm:"primaryKey"`
+	UserID          uint    `gorm:"uniqueIndex;not null"`
+	ProfilePicURL   string  `gorm:"type:text"`
+	Bio             string  `gorm:"type:text"`
+	Category        string  `json:"category"`
+	SubCategory     string  `json:"sub_category"`
+	Skills          string  `gorm:"type:text"`
+	Languages       string  `gorm:"type:text"`
 	HourlyPrice     float64 `gorm:"not null"`
 	ExperienceYears int     `gorm:"not null"`
-	RatingAvg    float64 `gorm:"default:0"`
-	TotalReviews int     `gorm:"default:0"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	LinkedinUrl     string  `json:"linkedin_url"`
+  Documents       string  `json:"documents"`
+	RatingAvg       float64 `gorm:"default:0"`
+	TotalReviews    int     `gorm:"default:0"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
-

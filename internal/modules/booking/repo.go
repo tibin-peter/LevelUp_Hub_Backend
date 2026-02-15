@@ -14,6 +14,8 @@ type Repository interface {
 	GetByID(id uint) (*Booking, error)
 	UpdateStatus(id uint, status string) error
 
+	MarkBookingPaid(id uint) error
+
 	GetStudentBookings(studentID uint) ([]Booking, error)
 	GetMentorBookings(mentorProfileID uint) ([]Booking, error)
 
@@ -36,46 +38,58 @@ func NewRepository(db *gorm.DB) Repository {
 	}
 }
 
-//create
+// create
 func (r *repo) Create(b *Booking) error {
 	return r.db.Create(b).Error
 }
 
-//get by slot id
+// get by slot id
 func (r *repo) GetBySlotID(slotID uint) (*Booking, error) {
 	var b Booking
 	err := r.db.Where("slot_id = ?", slotID).First(&b).Error
-	return &b, err
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
 }
 
-//get by id
+// get by id
 func (r *repo) GetByID(id uint) (*Booking, error) {
 	var b Booking
 	err := r.db.First(&b, id).Error
-	return &b, err
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
 }
 
-//update
+// update
 func (r *repo) UpdateStatus(id uint, status string) error {
 	err := r.db.Model(&Booking{}).Where("id = ?", id).Update("status", status).Error
 	return err
 }
 
-//get bookings for student
+func (r *repo) MarkBookingPaid(id uint) error {
+	return r.db.Model(&Booking{}).
+		Where("id = ?", id).
+		Update("status", "paid").Error
+}
+
+// get bookings for student
 func (r *repo) GetStudentBookings(studentID uint) ([]Booking, error) {
 	var list []Booking
 	err := r.db.Where("student_id = ?", studentID).Find(&list).Error
 	return list, err
 }
 
-//get bookings for mentor
+// get bookings for mentor
 func (r *repo) GetMentorBookings(mentorID uint) ([]Booking, error) {
 	var list []Booking
 	err := r.db.Where("mentor_profile_id = ?", mentorID).Find(&list).Error
 	return list, err
 }
 
-//upcoming
+// upcoming
 func (r *repo) GetUpcomingByStudent(studentID uint) ([]BookingResponseDTO, error) {
 
 	var list []BookingResponseDTO
@@ -101,12 +115,12 @@ func (r *repo) GetUpcomingByStudent(studentID uint) ([]BookingResponseDTO, error
 		`, studentID).
 		Order("ms.start_time ASC").
 		Scan(&list).Error
-		fmt.Println("repo data:",list)
+	fmt.Println("repo data:", list)
 
 	return list, err
 }
 
-//for history
+// for history
 func (r *repo) GetHistoryByStudent(studentID uint) ([]BookingResponseDTO, error) {
 
 	var list []BookingResponseDTO

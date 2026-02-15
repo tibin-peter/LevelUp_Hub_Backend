@@ -15,7 +15,7 @@ type Claims struct {
 
 //func for access token
 func GenerateAccessToken(userID uint,email,role,jwtkey string)(string,time.Time,error){
-	exp:=time.Now().Add(15 *time.Minute)
+	exp:=time.Now().Add(7*24 *time.Hour)
 	claims:=&Claims{
 		UserID: userID,
 		Email: email,

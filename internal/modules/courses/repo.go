@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	ListAllCourses(filter CourseFilter) ([]Course, error)
 	GetCourseByID(courseID uint) (*Course, error)
-	ReplaceMentorCourses(mentorID uint, courseIDs []uint) error
+	AddMentorCourse(mentorID uint, courseID uint) error
 	GetCoursesByMentor(mentorID uint) ([]Course, error)
   GetMentorsByCourse(courseID uint) ([]MentorWithUser, error)
 }
@@ -88,32 +88,18 @@ func (r *repo) GetCourseByID(courseID uint) (*Course, error) {
 	return &course, nil
 }
 
-//func for replace mentor course
-func (r *repo) ReplaceMentorCourses(mentorID uint, courseIDs []uint) error {
-	//start transaction
-	tx := r.db.Begin()
+func (r *repo) AddMentorCourse(mentorID uint, courseID uint) error {
+    mapping := MentorCourse{
+        MentorID: mentorID,
+        CourseID: courseID,
+    }
 
-	//delete old mappings
-	if err := tx.Where("mentor_id = ?", mentorID).Delete(&MentorCourse{}).Error; err != nil {
-		return err
-	}
-
-	//add new ones
-	var mappings []MentorCourse
-
-	for _, cid := range courseIDs {
-		mappings = append(mappings, MentorCourse{
-			MentorID: mentorID,
-			CourseID: cid,
-		})
-	}
-	if len(mappings) > 0 {
-		if err := tx.Create(&mappings).Error; err != nil {
-			tx.Rollback() //undo changes go back
-			return err
-		}
-	}
-	return tx.Commit().Error
+    // .FirstOrCreate prevents duplicate entries and SQL errors 
+    // if the user clicks the same course twice.
+    err := r.db.Where(MentorCourse{MentorID: mentorID, CourseID: courseID}).
+                FirstOrCreate(&mapping).Error
+                
+    return err
 }
 
 //func for get courses by mentor

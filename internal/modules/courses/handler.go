@@ -52,22 +52,20 @@ func (h *Handler) GetCourse(c *fiber.Ctx) error {
 	return utils.JSONSucess(c,"fetched successfully",course)
 }
 
-func (h *Handler) UpdateMentorCourses(c *fiber.Ctx) error {
+func (h *Handler) AddMentorCourse(c *fiber.Ctx) error {
+    userID := c.Locals("userID").(uint)
 
-	userID := c.Locals("userID").(uint)
+    var req AddMentorCourseRequest
+    if err := c.BodyParser(&req); err != nil {
+        return utils.JSONError(c, 400, "Invalid data")
+    }
+		
+    err := h.service.AddMentorCourse(userID, req.CourseID)
+    if err != nil {
+        return utils.JSONError(c, 400, err.Error())
+    }
 
-	var req UpdateMentorCoursesRequest
-
-	if err := c.BodyParser(&req); err != nil {
-		return utils.JSONError(c,400,"invalid data")
-	}
-
-	err := h.service.ReplaceMentorCourses(userID, req.CourseIDs)
-	if err != nil {
-		return utils.JSONError(c,400,err.Error())
-	}
-
-	return utils.JSONSucess(c,"update",nil)
+    return utils.JSONSucess(c, "Course added successfully", nil)
 }
 
 func (h *Handler) GetMentorCourses(c *fiber.Ctx) error {

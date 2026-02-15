@@ -1,14 +1,13 @@
 package courses
 
 import (
-	"errors"
 	"fmt"
 )
 
 type Service interface {
 	ListCourses(filter CourseFilter) ([]Course,error)
 	GetCourseByID(id uint) (*Course, error)
-	ReplaceMentorCourses(mentorID uint,coursesIDs []uint)error
+	AddMentorCourse(mentorID uint, courseID uint) error
 	GetCoursesByMentor(mentorID uint,) ([]Course, error)
 	GetMentorsByCourse(courseID uint,) ([]MentorWithUser, error)
 }
@@ -40,21 +39,14 @@ func (s *CourseService) GetCourseByID(id uint) (*Course, error) {
 	return s.repo.GetCourseByID(id)
 }
 
-//replace mentor course
-func(s *CourseService)ReplaceMentorCourses(mentorID uint,coursesIDs []uint)error{
-	if len(coursesIDs)==0{
-		return errors.New("at least one course needed")
-	}
+func (s *CourseService) AddMentorCourse(mentorID uint, courseID uint) error {
+    //  Validate course exists
+    _, err := s.repo.GetCourseByID(courseID)
+    if err != nil {
+        return fmt.Errorf("course %d not found", courseID)
+    }
 
-	//validate course exist
-	for _,cid:=range coursesIDs{
-		_,err:=s.repo.GetCourseByID(cid)
-		if err!=nil{
-			return fmt.Errorf("couses %d not found",cid)
-		}
-	}
-
-	return s.repo.ReplaceMentorCourses(mentorID,coursesIDs)
+    return s.repo.AddMentorCourse(mentorID, courseID)
 }
 
 //get course by mentor

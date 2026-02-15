@@ -9,21 +9,22 @@ import (
 )
 
 type Config struct {
-	AppPort   string
-	DBUrl     string
-	RedisAddr string
-	JWTSecret string
-
+	AppPort        string
+	DBUrl          string
+	RedisAddr      string
+	JWTSecret      string
+	RazorpayClient string
+	RazorpayKey    string
 }
 
 func LeadConfig() *Config {
 	err := godotenv.Load()
-	if err!=nil{
+	if err != nil {
 		log.Println("No env file found")
 	}
 
-  //loads .env and validate
-	required:=[]string{
+	//loads .env and validate
+	required := []string{
 		"APP_PORT",
 		"DB_HOST",
 		"DB_USER",
@@ -32,14 +33,16 @@ func LeadConfig() *Config {
 		"DB_PORT",
 		"REDIS_ADDR",
 		"JWT_SECRET",
+		"RAZORPAY_KEY_ID",
+		"RAZORPAY_SECRET",
 	}
-	for _,key:=range required{
-		if os.Getenv(key)==""{
-			log.Fatalf("Missing required env variable: %s",key)
+	for _, key := range required {
+		if os.Getenv(key) == "" {
+			log.Fatalf("Missing required env variable: %s", key)
 		}
 	}
 	//creating dburl
-	dbUrl:=fmt.Sprintf(
+	dbUrl := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
@@ -49,9 +52,11 @@ func LeadConfig() *Config {
 	)
 	//return the hole struct
 	return &Config{
-		AppPort: os.Getenv("APP_PORT"),
-		DBUrl: dbUrl,
+		AppPort:   os.Getenv("APP_PORT"),
+		DBUrl:     dbUrl,
 		RedisAddr: os.Getenv("REDIS_ADDR"),
 		JWTSecret: os.Getenv("JWT_SECRET"),
+		RazorpayClient:os.Getenv("RAZORPAY_KEY_ID"),
+		RazorpayKey:os.Getenv("RAZORPAY_SECRET"),
 	}
 }

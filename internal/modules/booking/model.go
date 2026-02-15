@@ -7,7 +7,7 @@ type Booking struct {
 	StudentID       uint   `gorm:"not null;index"`
 	MentorProfileID uint   `gorm:"not null;index"`
 	SlotID          uint   `gorm:"not null;uniqueIndex"`
-	Status          string `gorm:"default;'pending'"`
+	Status          string `gorm:"default;'pending_payment'"`
 	Price           float64
 	CreatedAt       time.Time
 }

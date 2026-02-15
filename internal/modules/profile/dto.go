@@ -9,10 +9,14 @@ type UpdateUserDTO struct {
 
 type MentorProfileInput struct {
 	Bio             string  `json:"bio"`
+	Category        string  `json:"category"`
+	SubCategory     string  `json:"sub_category"`
 	Skills          string  `json:"skills"`
 	Languages       string  `json:"languages"`
 	HourlyPrice     float64 `json:"hourly_price"`
 	ExperienceYears int     `json:"experience_years"`
+	LinkedinUrl     string  `json:"linkedin_url"`
+  Documents       string  `json:"documents"`
 }
 
 // pulic mentor response
@@ -20,6 +24,7 @@ type MentorProfileResponse struct {
 	ID     uint
 	UserID uint
 	Name   string
+	ProfilePicURL string
 
 	Bio       string
 	Skills    string
