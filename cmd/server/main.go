@@ -7,6 +7,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/message"
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
+	"LevelUp_Hub_Backend/internal/modules/ratings"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
 	"LevelUp_Hub_Backend/internal/platform/redis"
@@ -41,6 +42,7 @@ func main() {
 		&payment.Wallet{},
 		&payment.WalletTransaction{},
 		&payment.WithdrawRequest{},
+		&ratings.Rating{},
 	);err!=nil{
 		log.Fatal(err)
 	}
@@ -58,8 +60,8 @@ func main() {
 	//for frontend connect
 	app.Use(cors.New(cors.Config{
     AllowOrigins: "http://localhost:5173",
-    AllowMethods: "GET,POST,PUT,DELETE",
-    AllowHeaders: "Origin, Content-Type, Accept",
+    AllowMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+    AllowHeaders: "Origin, Content-Type, Accept,Authorization",
     AllowCredentials: true,
 }))
 

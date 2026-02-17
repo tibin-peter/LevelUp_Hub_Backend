@@ -8,12 +8,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 )
 
 type RazorpayClient interface {
 	CreateOrder(amount int64, currency, receipt string) (*RazorpayOrder, error)
-	VerifySignature(orderID, paymentID, signature string) bool
+	VerifySignature(orderID string, paymentID string, keyID string) bool
 	Refund(paymentID string) error
 }
 
@@ -80,19 +81,20 @@ func (r *razorpayClient) CreateOrder(
 
 ///////  verify signature  /////////
 
-func (r *razorpayClient) VerifySignature(
-	orderID, paymentID, signature string,
-) bool {
-
+func (r *razorpayClient) VerifySignature(orderID string, paymentID string, signature string) bool {
+	// The payload must be orderID + "|" + paymentID
 	payload := fmt.Sprintf("%s|%s", orderID, paymentID)
 
-	h := hmac.New(sha256.New, []byte(r.secret))
+	h := hmac.New(sha256.New, []byte(r.secret)) 
 	h.Write([]byte(payload))
 	expected := hex.EncodeToString(h.Sum(nil))
 
+	log.Printf("Payload: %s", payload)
+	log.Printf("Expected Hex: %s", expected)
+	log.Printf("Received Signature: %s", signature)
+
 	return expected == signature
 }
-
 func (r *razorpayClient) Refund(paymentID string) error {
 
     url := fmt.Sprintf(

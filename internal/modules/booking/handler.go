@@ -2,6 +2,7 @@ package booking
 
 import (
 	"LevelUp_Hub_Backend/internal/utils"
+	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -89,7 +90,8 @@ func (h *Handler) ApproveBooking(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.JSONError(c, 400, "invalid booking id")
 	}
-
+  
+	log.Println("booking id",id)
 	if err := h.service.ApproveBooking(uint(id), userID); err != nil {
 		return utils.JSONError(c, 400, err.Error())
 	}

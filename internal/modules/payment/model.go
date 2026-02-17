@@ -11,7 +11,8 @@ type Payment struct {
 
 	StudentID uint
 
-	MentorID   uint
+	MentorID     uint
+	MentorUserID uint
 
 	Amount   int64
 	Currency string
@@ -69,4 +70,11 @@ type WithdrawRequest struct {
 
 	RequestedAt time.Time
 	ProcessedAt time.Time
+}
+
+// verify payment
+type VerifyRequest struct {
+	OrderID   string `json:"order_id"`
+	PaymentID string `json:"payment_id"`
+	Signature string `json:"signature"`
 }

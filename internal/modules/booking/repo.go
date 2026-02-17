@@ -3,6 +3,7 @@ package booking
 import (
 	"LevelUp_Hub_Backend/internal/repository/generic"
 	"fmt"
+	// "time"
 
 	"gorm.io/gorm"
 )
@@ -24,6 +25,9 @@ type Repository interface {
 
 	GetUpcomingByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
 	GetHistoryByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
+
+	// GetStalePendingBookings(expiry time.Time) ([]Booking, error)
+	// GetUnapprovedPastBookings(now time.Time) ([]Booking, error)
 }
 
 type repo struct {
@@ -110,7 +114,7 @@ func (r *repo) GetUpcomingByStudent(studentID uint) ([]BookingResponseDTO, error
 		Joins("JOIN mentor_slots ms ON ms.id = bookings.slot_id").
 		Where(`
 			bookings.student_id = ?
-			AND bookings.status = 'confirmed'
+			AND bookings.status IN ('confirmed', 'paid')
 			AND ms.start_time > NOW()
 		`, studentID).
 		Order("ms.start_time ASC").
@@ -172,11 +176,13 @@ func (r *repo) GetUpcomingByMentor(mid uint) ([]BookingResponseDTO, error) {
 		Joins("JOIN mentor_slots ms ON ms.id = bookings.slot_id").
 		Where(`
 			bookings.mentor_profile_id = ?
-			AND bookings.status = 'confirmed'
+			AND bookings.status IN ('confirmed', 'paid')
 			AND ms.start_time > NOW()
 		`, mid).
 		Order("ms.start_time ASC").
 		Scan(&list).Error
+
+	fmt.Printf("[DEBUG] repo.GetUpcomingByMentor for mid %d returning %d items: %+v\n", mid, len(list), list)
 
 	return list, err
 }

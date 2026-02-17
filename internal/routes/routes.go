@@ -8,6 +8,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/message"
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
+	"LevelUp_Hub_Backend/internal/modules/ratings"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,41 +43,41 @@ func SetUp(
 	courses.RegisterRoutes(api, db, jwtSecret)
 	slot.RegisterRoutes(api, db, jwtSecret)
 	message.RegisterRoutes(api, db, jwtSecret)
-
+	ratings.RegisterRoutes(api, db, jwtSecret)
 
 	//////////// for booking and payment dependency wiring///////////////
 	// ---------- REPOSITORIES ----------
-    bookingRepo := booking.NewRepository(db)
-    slotRepo := slot.NewRepository(db)
-    mentorRepo := profile.NewMentorRepository(db)
-    paymentRepo := payment.NewRepository(db)
+	bookingRepo := booking.NewRepository(db)
+	slotRepo := slot.NewRepository(db)
+	mentorRepo := profile.NewMentorRepository(db)
+	paymentRepo := payment.NewRepository(db)
 
-    // ---------- RAZORPAY ----------
-    rzp := payment.NewRazorpayClient(rzpKey, rzpSecret)
+	// ---------- RAZORPAY ----------
+	rzp := payment.NewRazorpayClient(rzpKey, rzpSecret)
 
-    // ---------- SERVICES ----------
-    bookingService := booking.NewService(
-        bookingRepo,
-        slotRepo,
-        mentorRepo,
-        nil, // payment port set later
-    )
+	// ---------- SERVICES ----------
+	bookingService := booking.NewService(
+		bookingRepo,
+		slotRepo,
+		mentorRepo,
+		nil, // payment port set later
+	)
 
-    paymentService := payment.NewService(
-        paymentRepo,
-        bookingService, // BookingPort
-        rzp,
-        rzpKey,
-    )
+	paymentService := payment.NewService(
+		paymentRepo,
+		bookingService, // BookingPort
+		rzp,
+		rzpKey,
+	)
 
-    // inject escrow dependency
-    bookingService.SetPaymentPort(paymentService)
+	// inject escrow dependency
+	bookingService.SetPaymentPort(paymentService)
 
-    // ---------- HANDLERS ----------
-    bookingHandler := booking.NewHandler(bookingService)
-    paymentHandler := payment.NewHandler(paymentService)
+	// ---------- HANDLERS ----------
+	bookingHandler := booking.NewHandler(bookingService)
+	paymentHandler := payment.NewHandler(paymentService)
 
-    // ---------- REGISTER ROUTES ----------
-    booking.RegisterRoutes(api, jwtSecret, bookingHandler)
-    payment.RegisterRoutes(api, jwtSecret, paymentHandler)
+	// ---------- REGISTER ROUTES ----------
+	booking.RegisterRoutes(api, jwtSecret, bookingHandler)
+	payment.RegisterRoutes(api, jwtSecret, paymentHandler)
 }
