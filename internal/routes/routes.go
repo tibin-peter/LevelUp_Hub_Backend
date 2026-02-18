@@ -3,6 +3,7 @@ package routes
 import (
 	"LevelUp_Hub_Backend/internal/modules/auth"
 	"LevelUp_Hub_Backend/internal/modules/booking"
+	"LevelUp_Hub_Backend/internal/modules/complaints"
 	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/favorites"
@@ -48,6 +49,7 @@ func SetUp(
 	ratings.RegisterRoutes(api, db, jwtSecret)
 	favorites.RegisterRoutes(api,db,jwtSecret)
 	connections.RegisterRoutes(api,db,jwtSecret)
+	complaints.RegisterRoutes(api,db,jwtSecret)
 
 	//////////// for booking and payment dependency wiring///////////////
 	// ---------- REPOSITORIES ----------

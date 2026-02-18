@@ -3,6 +3,7 @@ package main
 import (
 	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/booking"
+	"LevelUp_Hub_Backend/internal/modules/complaints"
 	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/favorites"
@@ -47,6 +48,7 @@ func main() {
 		&ratings.Rating{},
 		&favorites.Favorite{},
 		&connections.Connection{},
+		&complaints.Complaint{},
 	);err!=nil{
 		log.Fatal(err)
 	}
