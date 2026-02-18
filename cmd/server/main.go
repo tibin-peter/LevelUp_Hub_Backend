@@ -4,6 +4,7 @@ import (
 	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/courses"
+	"LevelUp_Hub_Backend/internal/modules/favorites"
 	"LevelUp_Hub_Backend/internal/modules/message"
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
@@ -43,6 +44,7 @@ func main() {
 		&payment.WalletTransaction{},
 		&payment.WithdrawRequest{},
 		&ratings.Rating{},
+		&favorites.Favorite{},
 	);err!=nil{
 		log.Fatal(err)
 	}

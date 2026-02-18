@@ -4,6 +4,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/auth"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/courses"
+	"LevelUp_Hub_Backend/internal/modules/favorites"
 	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
 	"LevelUp_Hub_Backend/internal/modules/message"
 	"LevelUp_Hub_Backend/internal/modules/payment"
@@ -44,6 +45,7 @@ func SetUp(
 	slot.RegisterRoutes(api, db, jwtSecret)
 	message.RegisterRoutes(api, db, jwtSecret)
 	ratings.RegisterRoutes(api, db, jwtSecret)
+	favorites.RegisterRoutes(api,db,jwtSecret)
 
 	//////////// for booking and payment dependency wiring///////////////
 	// ---------- REPOSITORIES ----------
