@@ -1,6 +1,7 @@
 package booking
 
 import (
+	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/modules/slot"
@@ -35,14 +36,16 @@ type service struct {
 	repo       Repository
 	slotrepo   slot.Repository
 	mentorrepo profile.MentorRepository
+	connection connections.Service
 	paymentSvc PaymentPort
 }
 
-func NewService(repo Repository, s slot.Repository, m profile.MentorRepository, pay PaymentPort) Service {
+func NewService(repo Repository, s slot.Repository, m profile.MentorRepository,connection connections.Service, pay PaymentPort) Service {
 	return &service{
 		repo:       repo,
 		slotrepo:   s,
 		mentorrepo: m,
+		connection: connection,
 		paymentSvc: pay,
 	}
 }
@@ -272,12 +275,9 @@ func (s *service) MarkBookingPaid(bookingID uint) error {
 	}
 
 	// mark paid
-	log.Printf("[DEBUG] Marking booking %d as paid", bookingID)
 	if err := s.repo.UpdateStatus(bookingID, "paid"); err != nil {
 		return err
 	}
-
-	log.Printf("[DEBUG] Locking slot %d", booking.SlotID)
 	// lock slot
 	return s.slotrepo.MarkBooked(booking.SlotID, true)
 }
@@ -301,4 +301,28 @@ func (s *service) GetBookingByID(id uint) (payment.BookingDTO, error) {
 		Price:        b.Price,
 		Status:       b.Status,
 	}, nil
+}
+
+func (s *service) MarkCompleted(bookingID uint) error {
+
+	booking, err := s.repo.GetByID(bookingID)
+	if err != nil {
+		return err
+	}
+
+	// update status
+	if err := s.repo.UpdateStatus(bookingID, "completed"); err != nil {
+		return err
+	}
+
+	// creating the connection wiht student and mentor
+	err = s.connection.CreateConnection(
+		booking.StudentID,
+		booking.MentorProfileID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

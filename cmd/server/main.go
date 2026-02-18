@@ -3,6 +3,7 @@ package main
 import (
 	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/booking"
+	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/favorites"
 	"LevelUp_Hub_Backend/internal/modules/message"
@@ -45,6 +46,7 @@ func main() {
 		&payment.WithdrawRequest{},
 		&ratings.Rating{},
 		&favorites.Favorite{},
+		&connections.Connection{},
 	);err!=nil{
 		log.Fatal(err)
 	}

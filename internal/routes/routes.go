@@ -3,6 +3,7 @@ package routes
 import (
 	"LevelUp_Hub_Backend/internal/modules/auth"
 	"LevelUp_Hub_Backend/internal/modules/booking"
+	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/courses"
 	"LevelUp_Hub_Backend/internal/modules/favorites"
 	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
@@ -46,13 +47,18 @@ func SetUp(
 	message.RegisterRoutes(api, db, jwtSecret)
 	ratings.RegisterRoutes(api, db, jwtSecret)
 	favorites.RegisterRoutes(api,db,jwtSecret)
+	connections.RegisterRoutes(api,db,jwtSecret)
 
 	//////////// for booking and payment dependency wiring///////////////
 	// ---------- REPOSITORIES ----------
 	bookingRepo := booking.NewRepository(db)
 	slotRepo := slot.NewRepository(db)
 	mentorRepo := profile.NewMentorRepository(db)
+	connectionRepo:=connections.NewRepository(db)
 	paymentRepo := payment.NewRepository(db)
+
+	// ---------- Connection Service ----------
+	connection:=connections.NewService(connectionRepo,mentorRepo)
 
 	// ---------- RAZORPAY ----------
 	rzp := payment.NewRazorpayClient(rzpKey, rzpSecret)
@@ -62,6 +68,7 @@ func SetUp(
 		bookingRepo,
 		slotRepo,
 		mentorRepo,
+		connection,
 		nil, // payment port set later
 	)
 
