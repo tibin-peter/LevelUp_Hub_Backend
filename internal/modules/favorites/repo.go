@@ -7,6 +7,7 @@ type Repository interface {
 	Delete(studentID, mentorProfileID uint) error
 	Exists(studentID, mentorProfileID uint) (bool, error)
 	GetDetailedByStudent(studentID uint) ([]FavoriteResponse, error)
+	CountByStudent(userID uint) (int64, error)
 }
 
 type repo struct {
@@ -60,4 +61,15 @@ func (r *repo) GetDetailedByStudent(studentID uint) ([]FavoriteResponse, error) 
 		Scan(&res).Error
 
 	return res, err
+}
+
+func (r *repo) CountByStudent(userID uint) (int64, error) {
+
+	var count int64
+
+	err := r.db.Model(&Favorite{}).
+		Where("student_id=?", userID).
+		Count(&count).Error
+
+	return count, err
 }

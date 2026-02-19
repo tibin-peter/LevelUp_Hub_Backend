@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"LevelUp_Hub_Backend/internal/modules/admin/admin_dashboard"
 	"LevelUp_Hub_Backend/internal/modules/auth"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/complaints"
 	"LevelUp_Hub_Backend/internal/modules/connections"
 	"LevelUp_Hub_Backend/internal/modules/courses"
+	"LevelUp_Hub_Backend/internal/modules/dashboard"
 	"LevelUp_Hub_Backend/internal/modules/favorites"
 	"LevelUp_Hub_Backend/internal/modules/mentor_discovery"
 	"LevelUp_Hub_Backend/internal/modules/message"
@@ -50,6 +52,7 @@ func SetUp(
 	favorites.RegisterRoutes(api,db,jwtSecret)
 	connections.RegisterRoutes(api,db,jwtSecret)
 	complaints.RegisterRoutes(api,db,jwtSecret)
+	dashboard.RegisterRoutes(api,db,jwtSecret)
 
 	//////////// for booking and payment dependency wiring///////////////
 	// ---------- REPOSITORIES ----------
@@ -91,4 +94,11 @@ func SetUp(
 	// ---------- REGISTER ROUTES ----------
 	booking.RegisterRoutes(api, jwtSecret, bookingHandler)
 	payment.RegisterRoutes(api, jwtSecret, paymentHandler)
+
+
+
+//// ---------- Admin Related----------////
+
+admindashboard.RegisterRoutes(api,db,jwtSecret)
+
 }

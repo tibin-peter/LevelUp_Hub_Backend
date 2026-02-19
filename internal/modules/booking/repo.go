@@ -26,6 +26,9 @@ type Repository interface {
 	GetUpcomingByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
 	GetHistoryByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
 
+	CountByStatus(userID uint,status string) (int64, error)
+	CountRequests(profileID uint,) (int64,error)
+
 	// GetStalePendingBookings(expiry time.Time) ([]Booking, error)
 	// GetUnapprovedPastBookings(now time.Time) ([]Booking, error)
 }
@@ -216,4 +219,26 @@ func (r *repo) GetHistoryByMentor(mid uint) ([]BookingResponseDTO, error) {
 		Scan(&list).Error
 
 	return list, err
+}
+
+func (r *repo) CountByStatus(userID uint,status string) (int64, error) {
+
+	var count int64
+
+	err := r.db.Model(&Booking{}).
+		Where("student_id=? AND status=?", userID, status).
+		Count(&count).Error
+
+	return count, err
+}
+
+func (r *repo) CountRequests(profileID uint,) (int64,error){
+
+	var count int64
+
+	err := r.db.Model(&Booking{}).
+		Where("mentor_profile_id=? AND status='pending'", profileID).
+		Count(&count).Error
+
+	return count,err
 }

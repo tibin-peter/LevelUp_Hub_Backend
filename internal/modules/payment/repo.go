@@ -14,6 +14,7 @@ type Repository interface {
 	GetPaymentByOrderID(orderID string)(*Payment,error)
 	ListStudentPayments(studentID uint)([]PaymentSummary,error)
 	GetByBookingID(bookingID uint) (*Payment, error)
+	SumByMentor(profileID uint) (float64, error)
 
 	//wallet//
   GetWalletByUserID(userID uint) (*Wallet, error)
@@ -150,4 +151,16 @@ func (r *repo) ListPendingWithdraws() ([]WithdrawRequest, error) {
 
 func (r *repo) UpdateWithdraw(req *WithdrawRequest) error {
 	return r.withdrawBase.Update(req)
+}
+
+func (r *repo) SumByMentor(profileID uint) (float64, error) {
+
+	var sum float64
+
+	err := r.db.Model(&Payment{}).
+		Where("mentor_profile_id=?", profileID).
+		Select("COALESCE(SUM(amount),0)").
+		Scan(&sum).Error
+
+	return sum, err
 }
