@@ -19,9 +19,4 @@ func RegisterRoutes(app fiber.Router, db *gorm.DB, jwtSecret string) {
 	complaints.Post("/", handler.CreateComplaint)
 	complaints.Get("/my", handler.MyComplaints)
 
-	// ADMIN
-	admin := app.Group("/admin/complaints" , middleware.AuthMiddleware(jwtSecret),middleware.RequireRole("admin"))
-	admin.Get("/", handler.AllComplaints)
-	admin.Put("/:id/reply", handler.AdminReply)
-
 }

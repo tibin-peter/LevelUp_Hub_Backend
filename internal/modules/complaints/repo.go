@@ -1,11 +1,15 @@
 package complaints
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Repository interface {
 	Create(c *Complaint) error
 	GetByUser(userID uint) ([]Complaint, error)
-	GetAll() ([]Complaint, error)
+	GetAll(search string) ([]Complaint, error)
 
 	UpdateReply(id uint, reply, status string) error
 }
@@ -17,12 +21,13 @@ type repo struct {
 func NewRepository(db *gorm.DB) Repository {
 	return &repo{db: db}
 }
-//create
+
+// create
 func (r *repo) Create(c *Complaint) error {
 	return r.db.Create(c).Error
 }
 
-//get own complaints
+// get own complaints
 func (r *repo) GetByUser(userID uint) ([]Complaint, error) {
 	var list []Complaint
 
@@ -34,23 +39,38 @@ func (r *repo) GetByUser(userID uint) ([]Complaint, error) {
 	return list, err
 }
 
-//get all
-func (r *repo) GetAll() ([]Complaint, error) {
+// get all
+func (r *repo) GetAll(search string) ([]Complaint, error) {
+
 	var list []Complaint
 
-	err := r.db.
-		Order("created_at DESC").
-		Find(&list).Error
+	query := r.db.
+		Order("created_at DESC")
+
+	if search != "" {
+		query = query.Where(
+			"category ILIKE ? OR subject ILIKE ? OR description ILIKE ? OR status ILIKE ?",
+			"%"+search+"%",
+			"%"+search+"%",
+			"%"+search+"%",
+			"%"+search+"%",
+		)
+	}
+
+	err := query.Find(&list).Error
 
 	return list, err
 }
 
-//reply by admin
-func (r *repo) UpdateReply(id uint, reply, status string) error {
-	return r.db.Model(&Complaint{}).
+// update and reply
+func (r *repo) UpdateReply(id uint, reply string, status string) error {
+
+	return r.db.
+		Model(&Complaint{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"admin_reply": reply,
 			"status":      status,
+			"updated_at":  time.Now(),
 		}).Error
 }

@@ -10,6 +10,7 @@ type User struct {
 	Password      string `gorm:"not null"`
 	Role          string `gorm:"not null"`
 	IsVerified    bool
+	IsBlocked     bool
 	ProfilePicURL string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -27,6 +28,7 @@ type OTP struct {
 type MentorProfile struct {
 	ID              uint    `gorm:"primaryKey"`
 	UserID          uint    `gorm:"uniqueIndex;not null"`
+	Status          string  `gorm:"default:pending"`
 	ProfilePicURL   string  `gorm:"type:text"`
 	Bio             string  `gorm:"type:text"`
 	Category        string  `json:"category"`
@@ -41,4 +43,5 @@ type MentorProfile struct {
 	TotalReviews    int     `gorm:"default:0"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	User User `gorm:"foreignKey:UserID"`
 }

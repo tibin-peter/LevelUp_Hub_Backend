@@ -2,6 +2,7 @@ package routes
 
 import (
 	"LevelUp_Hub_Backend/internal/modules/admin/admin_dashboard"
+	"LevelUp_Hub_Backend/internal/modules/admin/usermanagement"
 	"LevelUp_Hub_Backend/internal/modules/auth"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/complaints"
@@ -100,5 +101,6 @@ func SetUp(
 //// ---------- Admin Related----------////
 
 admindashboard.RegisterRoutes(api,db,jwtSecret)
+usermanagement.RegisterRoutes(api,db,jwtSecret)
 
 }

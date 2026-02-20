@@ -87,7 +87,7 @@ func (s *service) CrateMentorProfile(userID uint, input MentorProfileInput) (*Me
 	}
 
 	// check existing profile
-	existing, _ := s.mentorrepo.FindMentorByID(userID)
+	existing, _ := s.mentorrepo.FindMentorByUserID(userID)
 	if existing != nil {
 		return nil, fmt.Errorf("mentor profile already exists")
 	}

@@ -2,7 +2,7 @@ package complaints
 
 import (
 	"LevelUp_Hub_Backend/internal/utils"
-	"strconv"
+	// "strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -43,34 +43,4 @@ func (h *Handler) MyComplaints(c *fiber.Ctx) error {
 	}
 
 	return utils.JSONSucess(c,"my complaints",list)
-}
-
-func (h *Handler) AllComplaints(c *fiber.Ctx) error {
-
-	list, err := h.service.AllComplaints()
-	if err != nil {
-		return utils.JSONError(c,500,err.Error())
-	}
-
-	return utils.JSONSucess(c,"all complaints",list)
-}
-
-func (h *Handler) AdminReply(c *fiber.Ctx) error {
-
-	id,_ := strconv.Atoi(c.Params("id"))
-
-	var req ReplyRequest
-	c.BodyParser(&req)
-
-	err := h.service.AdminReply(
-		uint(id),
-		req.Reply,
-		req.Status,
-	)
-
-	if err != nil {
-		return utils.JSONError(c,500,err.Error())
-	}
-
-	return utils.JSONSucess(c,"replied",nil)
 }
