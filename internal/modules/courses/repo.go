@@ -46,7 +46,7 @@ func (r *repo) ListAllCourses(filter CourseFilter) ([]Course, error) {
 
 	//search by tittle
 	if filter.Search != "" {
-		query = query.Where("LOWER(tittle) LIKE LOWER(?)", "%"+filter.Search+"%")
+		query = query.Where("LOWER(title) LIKE LOWER(?)", "%"+filter.Search+"%")
 	}
 
 	//by category
