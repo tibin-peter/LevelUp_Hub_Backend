@@ -15,7 +15,7 @@ func RegisterRoutes(r fiber.Router, db *gorm.DB,jwtSecret string) {
 	handler := NewHandler(service)
 
 	//Route group user
-	userGrop := r.Group("/users")
+	userGrop := r.Group("/users",middleware.AuthMiddleware(jwtSecret))
 
 	userGrop.Get("/:id", handler.GetUserById)
 	userGrop.Get("/email/:email", handler.GetUserByEmail)

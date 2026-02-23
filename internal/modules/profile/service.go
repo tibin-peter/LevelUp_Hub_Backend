@@ -112,7 +112,7 @@ func (s *service) CrateMentorProfile(userID uint, input MentorProfileInput) (*Me
 
 //get mentor profile by id
 func (s *service) GetMentorProfileByUserID(userID uint) (*MentorProfile, error) {
-	profile, err := s.mentorrepo.FindMentorByID(userID)
+	profile, err := s.mentorrepo.FindMentorByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (s *service) GetMentorProfileByUserID(userID uint) (*MentorProfile, error) 
 //update mentor profile
 func (s *service) UpdateMentorProfile(userID uint, input MentorProfileInput) (*MentorProfile, error) {
     // find the existing profile
-    existing, err := s.mentorrepo.FindMentorByID(userID)
+    existing, err := s.mentorrepo.FindMentorByUserID(userID)
     
     if err != nil || existing == nil {
         return nil, fmt.Errorf("mentor profile not found for user %d", userID)

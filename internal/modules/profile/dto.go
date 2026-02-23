@@ -4,7 +4,7 @@ import "time"
 
 type UpdateUserDTO struct {
 	Name          string `json:"name"`
-	ProfilePicURL string
+	ProfilePicURL string `json:"profilePicURL"`
 }
 
 type MentorProfileInput struct {

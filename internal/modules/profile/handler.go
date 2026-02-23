@@ -51,16 +51,15 @@ func (h *Handler) GetUserByEmail(c *fiber.Ctx) error {
 
 //Update user
 func (h *Handler) UpdateUser(c *fiber.Ctx) error {
-	idParam := c.Params("id")
-	id, err := strconv.Atoi(idParam)
-	if err != nil || id <= 0 {
+	userID := c.Locals("userID").(uint)
+	if  userID <= 0 {
 		return utils.JSONError(c, 400, "invalid user id")
 	}
 	var dto UpdateUserDTO
 	if err := c.BodyParser(&dto); err != nil {
 		return utils.JSONError(c, 400, "invalid required body")
 	}
-	user, err := h.service.GetUserById(uint(id))
+	user, err := h.service.GetUserById(userID)
 	if err != nil {
 		return utils.JSONError(c, 404, err.Error())
 	}
@@ -94,11 +93,13 @@ func (h *Handler)DeleteUser(c *fiber.Ctx)error{
 //create mentor profile
 func (h *Handler) CreateMentorProfile(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(uint)
+	log.Println("id",userID)
 
 	var input MentorProfileInput
 	if err := c.BodyParser(&input); err != nil {
 		return utils.JSONError(c,400,"invalid input")
 	}
+	log.Println("input",input)
 
 	profile,err := h.service.CrateMentorProfile(userID, input)
 	if err != nil {
