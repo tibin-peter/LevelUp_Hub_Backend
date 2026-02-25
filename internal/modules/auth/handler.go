@@ -44,7 +44,7 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 	if required.Role != "student" && required.Role != "mentor" {
 		return utils.JSONError(c, 400, "invalid role")
 	}
-	access, refresh, userData, status, err := h.service.Register(required.Name, required.Email, required.Password, required.Role, required.OTP)
+	access, refresh, userData, status,permissions, err := h.service.Register(required.Name, required.Email, required.Password, required.Role, required.OTP)
 	if err != nil {
 		return utils.JSONError(c, 400, err.Error())
 	}
@@ -73,6 +73,7 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		Status:        status,
 		IsVerified:    userData.IsVerified,
 		ProfilePicURL: userData.ProfilePicURL,
+		Permissions: permissions,
 	}
 	return utils.JSONSucess(c, "registed and logged in", responseData)
 }
@@ -87,7 +88,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	if req.Email == "" || req.Password == "" {
 		return utils.JSONError(c, 400, "email and password required")
 	}
-	access, refresh, userData, status, err := h.service.Login(req.Email, req.Password)
+	access, refresh, userData, status,permissions, err := h.service.Login(req.Email, req.Password)
 	if err != nil {
 		return utils.JSONError(c, 400, err.Error())
 	}
@@ -107,6 +108,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		SameSite: "Lax",
 		MaxAge:   7 * 24 * 3600,
 	})
+
 	// 4. Prepare Response Data
 	responseData := AuthResponseData{
 		Email:         userData.Email,
@@ -116,6 +118,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Status:        status,
 		IsVerified:    userData.IsVerified,
 		ProfilePicURL: userData.ProfilePicURL,
+		Permissions:   permissions,
 	}
 	return utils.JSONSucess(c, "loggin successfull", responseData)
 }

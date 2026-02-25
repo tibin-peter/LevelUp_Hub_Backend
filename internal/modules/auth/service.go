@@ -2,6 +2,7 @@ package auth
 
 import (
 	"LevelUp_Hub_Backend/internal/modules/profile"
+	"LevelUp_Hub_Backend/internal/modules/rbac"
 	"LevelUp_Hub_Backend/internal/utils"
 	"context"
 	"fmt"
@@ -13,8 +14,8 @@ import (
 
 type Service interface {
 	SendOTP(email string) error
-	Register(name, email, password, role, inputOTP string) (string, string, *profile.User, string, error)
-	Login(email, password string) (string, string, *profile.User, string, error)
+	Register(name, email, password, role, inputOTP string) (string, string, *profile.User, string, []rbac.Permission, error)
+	Login(email, password string) (string, string, *profile.User, string, []rbac.Permission, error)
 	Refresh(refresh string) (string, string, error)
 	Logout(userID uint) error
 }
@@ -22,14 +23,16 @@ type Service interface {
 type service struct {
 	repo       profile.Repository
 	mentorrepo profile.MentorRepository
+	rbacRepo   rbac.Repository
 	redis      *redis.Client
 	JWTSecret  string
 }
 
-func NewService(repo profile.Repository, mentorrepo profile.MentorRepository, rdb *redis.Client, jwtSecret string) *service {
+func NewService(repo profile.Repository, mentorrepo profile.MentorRepository, rbac rbac.Repository, rdb *redis.Client, jwtSecret string) *service {
 	return &service{
 		repo:       repo,
 		mentorrepo: mentorrepo,
+		rbacRepo:   rbac,
 		redis:      rdb,
 		JWTSecret:  jwtSecret,
 	}
@@ -66,35 +69,35 @@ func (s *service) SendOTP(email string) error {
 }
 
 // fucn for Register
-func (s *service) Register(name, email, password, role, inputOTP string) (string, string, *profile.User, string, error) {
+func (s *service) Register(name, email, password, role, inputOTP string) (string, string, *profile.User, string, []rbac.Permission, error) {
 	ctx := context.Background()
 
 	//get otp
 	storedotp, err := s.redis.Get(ctx, "otp:"+email).Result()
 	if err != nil {
-		return "", "", nil, "", fmt.Errorf("otp expired")
+		return "", "", nil, "", nil, fmt.Errorf("otp expired")
 	}
 	//check
 	if storedotp != inputOTP {
-		return "", "", nil, "", fmt.Errorf("invalid otp")
+		return "", "", nil, "", nil, fmt.Errorf("invalid otp")
 	}
 
 	//check user exist
 	existing, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return "", "", nil, "", err // real DB error
+		return "", "", nil, "", nil, err // real DB error
 	}
 	if existing.ID != 0 {
-		return "", "", nil, "", fmt.Errorf("email already registed")
+		return "", "", nil, "", nil, fmt.Errorf("email already registed")
 	}
 	//validate role
 	if role != "student" && role != "mentor" {
-		return "", "", nil, "", fmt.Errorf("invalid role")
+		return "", "", nil, "", nil, fmt.Errorf("invalid role")
 	}
 	//hasing password
 	hash, err := utils.HashPassword(password)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 	//create user
 	newUser := profile.User{
@@ -106,7 +109,7 @@ func (s *service) Register(name, email, password, role, inputOTP string) (string
 	}
 	//save user
 	if err := s.repo.CreateUser(&newUser); err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 
 	status := ""
@@ -116,7 +119,7 @@ func (s *service) Register(name, email, password, role, inputOTP string) (string
 			UserID: newUser.ID,
 		}
 		if err := s.mentorrepo.CreateMentor(&mp); err != nil {
-			return "", "", nil, "", err
+			return "", "", nil, "", nil, err
 		}
 		status = "pending"
 	} else if role == "student" {
@@ -128,12 +131,12 @@ func (s *service) Register(name, email, password, role, inputOTP string) (string
 	//generate access token
 	access, _, err := utils.GenerateAccessToken(newUser.ID, newUser.Email, newUser.Role, s.JWTSecret)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 	//generate refresh
 	refresh, exp, err := utils.GenerateRefreshToken(newUser.ID, newUser.Email, newUser.Role, s.JWTSecret)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 
 	//store refresh to redis
@@ -143,24 +146,25 @@ func (s *service) Register(name, email, password, role, inputOTP string) (string
 		refresh,
 		time.Until(exp),
 	)
+	persmission, _ := s.rbacRepo.GetPermissionsByRole(role)
 
-	return access, refresh, &newUser, status, nil
+	return access, refresh, &newUser, status, persmission.Permissions, nil
 }
 
 // fucn login
-func (s *service) Login(email, password string) (string, string, *profile.User, string, error) {
+func (s *service) Login(email, password string) (string, string, *profile.User, string, []rbac.Permission, error) {
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 	if user.ID == 0 {
-		return "", "", nil, "", fmt.Errorf("invalid email")
+		return "", "", nil, "", nil, fmt.Errorf("invalid email")
 	}
 	if !user.IsVerified {
-		return "", "", nil, "", fmt.Errorf("user not varified")
+		return "", "", nil, "", nil, fmt.Errorf("user not varified")
 	}
 	if err := utils.CheckPassword(user.Password, password); err != nil {
-		return "", "", nil, "", fmt.Errorf("wrong password")
+		return "", "", nil, "", nil, fmt.Errorf("wrong password")
 	}
 
 	status := ""
@@ -175,12 +179,12 @@ func (s *service) Login(email, password string) (string, string, *profile.User, 
 
 	access, _, err := utils.GenerateAccessToken(user.ID, user.Email, user.Role, s.JWTSecret)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 	//generate refresh
 	refresh, exp, err := utils.GenerateRefreshToken(user.ID, user.Email, user.Role, s.JWTSecret)
 	if err != nil {
-		return "", "", nil, "", err
+		return "", "", nil, "", nil, err
 	}
 	//store in redis
 	ctx := context.Background()
@@ -190,7 +194,11 @@ func (s *service) Login(email, password string) (string, string, *profile.User, 
 		refresh,
 		time.Until(exp),
 	)
-	return access, refresh, user, status, nil
+	var permissions []rbac.Permission
+	if role, err := s.rbacRepo.GetPermissionsByRole(user.Role); err == nil && role != nil {
+		permissions = role.Permissions
+	}
+	return access, refresh, user, status, permissions, nil
 
 }
 

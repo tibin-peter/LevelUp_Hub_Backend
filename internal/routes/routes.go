@@ -17,6 +17,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/modules/ratings"
+	"LevelUp_Hub_Backend/internal/modules/rbac"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 
 	"github.com/gofiber/fiber/v2"
@@ -106,5 +107,8 @@ admindashboard.RegisterRoutes(api,db,jwtSecret)
 usermanagement.RegisterRoutes(api,db,jwtSecret)
 admincourses.RegisterRoutes(api,db,jwtSecret)
 adminprofile.RegisterRoutes(api,db,jwtSecret)
+
+//// ---------- RBAC Related----------////
+rbac.RegisterRoutes(api,db,jwtSecret)
 
 }

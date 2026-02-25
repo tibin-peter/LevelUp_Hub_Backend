@@ -22,17 +22,17 @@ func NewService(repo Repository) Service {
 
 // create slot
 func (s *service) CreateSlot(userID uint, req CreateSlotRequest) error {
-	now := time.Now()
+	// now := time.Now()
 
-	// 1. Lead time check: Must be at least 1 hour in the future
-	if req.StartTime.Before(now.Add(time.Hour)) {
-		return errors.New("slots must be created at least 1 hour in advance")
-	}
+	// // 1. Lead time check: Must be at least 1 hour in the future
+	// if req.StartTime.Before(now.Add(time.Hour)) {
+	// 	return errors.New("slots must be created at least 1 hour in advance")
+	// }
 
-	// 2. Duration check: Must be at least 1 hour
-	if req.EndTime.Sub(req.StartTime) < time.Hour {
-		return errors.New("slot duration must be at least 1 hour")
-	}
+	// // 2. Duration check: Must be at least 1 hour
+	// if req.EndTime.Sub(req.StartTime) < time.Hour {
+	// 	return errors.New("slot duration must be at least 1 hour")
+	// }
 
 	// 3. Basic validity check
 	if !req.EndTime.After(req.StartTime) {

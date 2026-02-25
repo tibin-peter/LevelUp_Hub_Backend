@@ -1,4 +1,4 @@
-package main
+package seed
 
 import (
 	"LevelUp_Hub_Backend/internal/config"
@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func main() {
+func Addadmin() {
   //Load config
 	cfg := config.LeadConfig()
 
@@ -32,7 +32,7 @@ func main() {
     Role: "admin",
   }
 
-  db.Create(&admin)
+  db.FirstOrCreate(&admin)
 
   fmt.Println("Admin seeded successfully")
 }

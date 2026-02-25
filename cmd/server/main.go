@@ -1,6 +1,7 @@
 package main
 
 import (
+	"LevelUp_Hub_Backend/cmd/seed"
 	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/booking"
 	"LevelUp_Hub_Backend/internal/modules/complaints"
@@ -11,6 +12,7 @@ import (
 	"LevelUp_Hub_Backend/internal/modules/payment"
 	"LevelUp_Hub_Backend/internal/modules/profile"
 	"LevelUp_Hub_Backend/internal/modules/ratings"
+	"LevelUp_Hub_Backend/internal/modules/rbac"
 	"LevelUp_Hub_Backend/internal/modules/slot"
 	"LevelUp_Hub_Backend/internal/platform/postgres"
 	"LevelUp_Hub_Backend/internal/platform/redis"
@@ -31,6 +33,13 @@ func main() {
 	if err !=nil{
 		log.Fatal("Postgres connection failed:",err)
 	}
+	
+	//for seed
+	seed.SeedRoles(db)
+	seed.SeedPermissions(db)
+	seed.SeedAdminPermissions(db)
+
+
 	//run migrations
 	if err:=db.AutoMigrate(
 		&profile.User{},
@@ -49,6 +58,9 @@ func main() {
 		&favorites.Favorite{},
 		&connections.Connection{},
 		&complaints.Complaint{},
+		//rbac
+		&rbac.Role{},
+		&rbac.Permission{},
 	);err!=nil{
 		log.Fatal(err)
 	}

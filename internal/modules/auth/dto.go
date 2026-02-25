@@ -1,5 +1,7 @@
 package auth
 
+import "LevelUp_Hub_Backend/internal/modules/rbac"
+
 // Register dto
 type RegisterRequest struct {
 	Name     string `json:"name"`
@@ -29,4 +31,5 @@ type AuthResponseData struct {
 	Status        string `json:"status"`
 	IsVerified    bool   `json:"isVerified"`
 	ProfilePicURL string `json:"profilePicURL"`
+	Permissions   []rbac.Permission `json:"permissions"`
 }

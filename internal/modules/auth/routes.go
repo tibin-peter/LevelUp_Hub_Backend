@@ -3,6 +3,7 @@ package auth
 import (
 	"LevelUp_Hub_Backend/internal/middleware"
 	"LevelUp_Hub_Backend/internal/modules/profile"
+	"LevelUp_Hub_Backend/internal/modules/rbac"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
@@ -19,7 +20,8 @@ func RegisterRoutes(
 	//dependency wiring
 	repo:=profile.NewRepository(db)
 	mentorrepo:=profile.NewMentorRepository(db)
-	service:=NewService(repo,mentorrepo,rdb,jwtSecret)
+	rbacRepo:=rbac.NewRepository(db)
+	service:=NewService(repo,mentorrepo,*rbacRepo,rdb,jwtSecret)
 	handler:=NewHandler(service)
 
 	//group routes
