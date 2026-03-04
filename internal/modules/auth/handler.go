@@ -53,7 +53,8 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		Name:     "access_token",
 		Value:    access,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 
@@ -61,7 +62,8 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    refresh,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 	// Prepare the data for the frontend
@@ -97,7 +99,8 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Name:     "access_token",
 		Value:    access,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 
@@ -105,7 +108,8 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    refresh,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 
@@ -139,7 +143,8 @@ func (h *Handler) Refresh(c *fiber.Ctx) error {
 		Name:     "access_token",
 		Value:    access,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 
@@ -147,7 +152,8 @@ func (h *Handler) Refresh(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    refresh,
 		HTTPOnly: true,
-		SameSite: "Lax",
+		Secure: true,
+		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
 	return utils.JSONSucess(c, "token refreshed", nil)
