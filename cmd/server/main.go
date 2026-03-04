@@ -96,10 +96,6 @@ func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		port = cfg.AppPort
-	}
-
-	if port == "" {
 		port = "8080"
 	}
 
