@@ -75,7 +75,9 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 		Status:        status,
 		IsVerified:    userData.IsVerified,
 		ProfilePicURL: userData.ProfilePicURL,
-		Permissions: permissions,
+		Permissions:   permissions,
+		AccessToken:   access,
+		RefreshToken:  refresh,
 	}
 	return utils.JSONSucess(c, "registed and logged in", responseData)
 }
@@ -123,6 +125,8 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		IsVerified:    userData.IsVerified,
 		ProfilePicURL: userData.ProfilePicURL,
 		Permissions:   permissions,
+		AccessToken:   access,
+		RefreshToken:  refresh,
 	}
 	return utils.JSONSucess(c, "loggin successfull", responseData)
 }
@@ -130,13 +134,24 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 // func for refresh
 func (h *Handler) Refresh(c *fiber.Ctx) error {
 	refresh := c.Cookies("refresh_token")
+
+	// Fallback to reading from JSON body
 	if refresh == "" {
-		return utils.JSONError(c, 401, "token is missing")
+		var body struct {
+			RefreshToken string `json:"refreshToken"`
+		}
+		if err := c.BodyParser(&body); err == nil && body.RefreshToken != "" {
+			refresh = body.RefreshToken
+		}
 	}
 
-	access, refresh, err := h.service.Refresh(refresh)
+	if refresh == "" {
+		return utils.JSONError(c, 401, "refresh token is missing")
+	}
+
+	access, newRefresh, err := h.service.Refresh(refresh)
 	if err != nil {
-		return utils.JSONError(c, 400, err.Error())
+		return utils.JSONError(c, 401, err.Error())
 	}
 	//set cookies
 	c.Cookie(&fiber.Cookie{
@@ -150,13 +165,17 @@ func (h *Handler) Refresh(c *fiber.Ctx) error {
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
-		Value:    refresh,
+		Value:    newRefresh,
 		HTTPOnly: true,
-		Secure: true,
+		Secure:   true,
 		SameSite: "None",
 		MaxAge:   7 * 24 * 3600,
 	})
-	return utils.JSONSucess(c, "token refreshed", nil)
+
+	return utils.JSONSucess(c, "token refreshed", fiber.Map{
+		"accessToken":  access,
+		"refreshToken": newRefresh,
+	})
 }
 
 // func for logout

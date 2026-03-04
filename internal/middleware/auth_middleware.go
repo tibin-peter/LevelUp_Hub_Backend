@@ -9,12 +9,22 @@ import (
 //for jwt authentication
 func AuthMiddleware(JWTSecret string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		//read cookie
+		// 1. Try to read from cookie
 		tokenStr := c.Cookies("access_token")
+
+		// 2. Try to read from Authorization header if cookie is missing
+		if tokenStr == "" {
+			authHeader := c.Get("Authorization")
+			if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				tokenStr = authHeader[7:]
+			}
+		}
+
 		if tokenStr == "" {
 			return utils.JSONError(c, 401, "missing token")
 		}
-		//validate token
+
+		// validate token
 		claims, err := utils.ValidateToken(tokenStr, JWTSecret)
 		if err != nil {
 			return utils.JSONError(c, 401, "invalid token")

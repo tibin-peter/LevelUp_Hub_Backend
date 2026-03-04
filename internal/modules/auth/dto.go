@@ -30,6 +30,8 @@ type AuthResponseData struct {
 	Name          string `json:"name"`
 	Status        string `json:"status"`
 	IsVerified    bool   `json:"isVerified"`
-	ProfilePicURL string `json:"profilePicURL"`
+	ProfilePicURL string            `json:"profilePicURL"`
 	Permissions   []rbac.Permission `json:"permissions"`
+	AccessToken   string            `json:"accessToken,omitempty"`
+	RefreshToken  string            `json:"refreshToken,omitempty"`
 }
