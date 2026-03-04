@@ -79,7 +79,7 @@ func main() {
 
 	//for frontend connect
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://levelup-hub-backend.onrender.com,http://localhost:5173",
+		AllowOrigins:     "https://level-up-hub-frontend.vercel.app,http://localhost:5173",
 		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept,Authorization",
 		AllowCredentials: true,
