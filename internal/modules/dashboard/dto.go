@@ -13,6 +13,8 @@ type StudentDashboard struct {
 
 type MentorDashboard struct {
 	TotalEarnings  float64 `json:"total_earnings"`
+	TotalBalance   float64 `json:"total_balance"`
+	WalletBalance  float64 `json:"wallet_balance"`
 	TotalStudents  int64   `json:"total_students"`
 	AvgRating      float64 `json:"avg_rating"`
 	BookingRequests int64  `json:"booking_requests"`

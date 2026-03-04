@@ -92,15 +92,28 @@ func (s *service) MentorDashboard(userID uint) (*MentorDashboard,error){
 
 	profileID := profile.ID
 
-	earnings,_ := s.paymentRepo.SumByMentor(profileID)
-	students,_ := s.connectionRepo.CountStudents(profileID)
-	rating,_ := s.ratingRepo.GetAverageByMentor(profileID)
-	requests,_ := s.bookingRepo.CountRequests(profileID)
+	// Fetch actual wallet balance
+	wallet, _ := s.paymentRepo.GetWalletByUserID(userID)
+	walletBalance := 0.0
+	if wallet != nil {
+		walletBalance = wallet.Balance
+	}
+
+	// Calculate cumulative released earnings (already in INR in wallet transactions if we want, or from payments)
+	// For "Total Earnings" card, we usually want the sum of what reached the wallet.
+	var cumulativeEarnings float64
+	s.paymentRepo.SumCumulativeEarnings(profileID, &cumulativeEarnings)
+
+	students, _ := s.connectionRepo.CountStudents(profileID)
+	rating, _ := s.ratingRepo.GetAverageByMentor(profileID)
+	requests, _ := s.bookingRepo.CountRequests(profileID)
 
 	return &MentorDashboard{
-		TotalEarnings: earnings,
-		TotalStudents: students,
-		AvgRating: rating,
+		TotalEarnings:   cumulativeEarnings, // Sum of released funds
+		TotalBalance:    walletBalance,      // Current spendable balance
+		WalletBalance:   walletBalance,
+		TotalStudents:   students,
+		AvgRating:       rating,
 		BookingRequests: requests,
-	},nil
+	}, nil
 }

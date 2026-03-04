@@ -13,6 +13,9 @@ type Repository interface {
 	PendingMentors() ([]profile.MentorProfile,error)
 	ApproveMentor(id uint) error
 	RejectMentor(id uint) error
+	ListAllUsers(search string) ([]profile.User, error)
+	CreateUser(user *profile.User) error
+	CreateMentorProfile(mp *profile.MentorProfile) error
 }
 
 type repo struct {
@@ -82,4 +85,22 @@ func (r *repo) RejectMentor(id uint) error {
 		Model(&profile.MentorProfile{}).
 		Where("id=?", id).
 		Update("status", "rejected").Error
+}
+
+func (r *repo) ListAllUsers(search string) ([]profile.User, error) {
+	var users []profile.User
+	query := r.db.Where("role != ?", "admin")
+	if search != "" {
+		query = query.Where("name ILIKE ? OR email ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+	err := query.Find(&users).Error
+	return users, err
+}
+
+func (r *repo) CreateUser(user *profile.User) error {
+	return r.db.Create(user).Error
+}
+
+func (r *repo) CreateMentorProfile(mp *profile.MentorProfile) error {
+	return r.db.Create(mp).Error
 }

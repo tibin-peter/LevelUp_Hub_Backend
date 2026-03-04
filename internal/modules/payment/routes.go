@@ -7,27 +7,29 @@ import (
 )
 
 func RegisterRoutes(
-    app fiber.Router,
-    jwtSecret string,
-    handler *Handler,
+	app fiber.Router,
+	jwtSecret string,
+	handler *Handler,
 ) {
 
-    p := app.Group("/payments",
-        middleware.AuthMiddleware(jwtSecret),
-    )
+	p := app.Group("/payments",
+		middleware.AuthMiddleware(jwtSecret),
+	)
 
-    p.Post("/order", handler.CreateOrder)
-    p.Post("/verify", handler.VerifyPayment)
-    p.Get("/student", handler.GetStudentPayments)
-    p.Get("/mentor/earnings", handler.GetMentorEarnings)
-    p.Post("/withdraw", handler.RequestWithdraw)
+	p.Post("/order", handler.CreateOrder)
+	p.Post("/verify", handler.VerifyPayment)
+	p.Get("/student", handler.GetStudentPayments)
+	p.Get("/mentor/earnings", handler.GetMentorEarnings)
+	p.Post("/withdraw", handler.RequestWithdraw)
+	p.Get("/withdrawals", handler.GetMentorWithdrawals)
 
-	// // admin later if needed not now
-	// admin := p.Group("/admin", auth,
-	// 	middleware.RequireRole("admin"),
-	// )
-
-	// admin.Get("/withdraws", handler.ListWithdrawRequests)
-	// admin.Patch("/withdraw/:id", handler.ApproveWithdraw)
-
+	// Admin routes
+	admin := p.Group("/admin", middleware.RequireRole("admin"))
+	admin.Get("/ledger", handler.AdminGetLedger)
+	admin.Get("/payment-overview", handler.AdminGetPaymentOverview)
+	admin.Get("/wallet-overview", handler.AdminGetWalletOverview)
+	admin.Get("/wallet-transactions", handler.AdminGetWalletTransactions)
+	admin.Get("/withdrawals", handler.AdminGetWithdrawals)
+	admin.Patch("/withdraw/:id/approve", handler.AdminApproveWithdrawal)
+	admin.Patch("/withdraw/:id/reject", handler.AdminRejectWithdrawal)
 }

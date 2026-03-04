@@ -28,104 +28,124 @@ func (h *Handler) Students(c *fiber.Ctx) error {
 
 func (h *Handler) Mentors(c *fiber.Ctx) error {
 
-	search := c.Query("search","")
+	search := c.Query("search", "")
 
-	data,err := h.service.ListUsers("mentor",search)
+	data, err := h.service.ListUsers("mentor", search)
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"mentors",data)
+	return utils.JSONSucess(c, "mentors", data)
 }
 
 func (h *Handler) BlockUser(c *fiber.Ctx) error {
 
-	id,_ := c.ParamsInt("id")
+	id, _ := c.ParamsInt("id")
 
 	err := h.service.BlockUser(uint(id))
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"user blocked",nil)
+	return utils.JSONSucess(c, "user blocked", nil)
 }
 
 func (h *Handler) UnblockUser(c *fiber.Ctx) error {
 
-	id,_ := c.ParamsInt("id")
+	id, _ := c.ParamsInt("id")
 
 	err := h.service.UnblockUser(uint(id))
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"user unblocked",nil)
+	return utils.JSONSucess(c, "user unblocked", nil)
 }
 
 func (h *Handler) PendingMentors(c *fiber.Ctx) error {
 
-	data,err := h.service.PendingMentors()
+	data, err := h.service.PendingMentors()
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"pending mentors",data)
+	return utils.JSONSucess(c, "pending mentors", data)
 }
 
 func (h *Handler) ApproveMentor(c *fiber.Ctx) error {
 
-	id,_ := c.ParamsInt("id")
+	id, _ := c.ParamsInt("id")
 
 	err := h.service.ApproveMentor(uint(id))
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"mentor approved",nil)
+	return utils.JSONSucess(c, "mentor approved", nil)
 }
 
 func (h *Handler) RejectMentor(c *fiber.Ctx) error {
 
-	id,_ := c.ParamsInt("id")
+	id, _ := c.ParamsInt("id")
 
 	err := h.service.RejectMentor(uint(id))
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"mentor rejected",nil)
+	return utils.JSONSucess(c, "mentor rejected", nil)
 }
-
 
 func (h *Handler) Complaints(c *fiber.Ctx) error {
 
-	search := c.Query("search","")
+	search := c.Query("search", "")
 
-	data,err := h.service.ListComplaints(search)
+	data, err := h.service.ListComplaints(search)
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"complaints",data)
+	return utils.JSONSucess(c, "complaints", data)
 }
 
 func (h *Handler) ReplyComplaint(c *fiber.Ctx) error {
 
-	id,_ := c.ParamsInt("id")
+	id, _ := c.ParamsInt("id")
 
-	var body struct{
-		Reply string `json:"reply"`
+	var body struct {
+		Reply  string `json:"reply"`
 		Status string `json:"status"`
 	}
 
 	if err := c.BodyParser(&body); err != nil {
-		return utils.JSONError(c,400,"invalid body")
+		return utils.JSONError(c, 400, "invalid body")
 	}
 
-	err := h.service.ReplyComplaint(uint(id),body.Reply,body.Status)
+	err := h.service.ReplyComplaint(uint(id), body.Reply, body.Status)
 	if err != nil {
-		return utils.JSONError(c,500,err.Error())
+		return utils.JSONError(c, 500, err.Error())
 	}
 
-	return utils.JSONSucess(c,"reply added",nil)
+	return utils.JSONSucess(c, "reply added", nil)
+}
+
+func (h *Handler) ListAllUsers(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	data, err := h.service.ListAllUsers(search)
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched all users", data)
+}
+
+func (h *Handler) CreateUser(c *fiber.Ctx) error {
+	var req CreateUserRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.JSONError(c, 400, "invalid input")
+	}
+	err := h.service.CreateUser(req.Name, req.Email, req.Password, req.Role)
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "user created", nil)
 }

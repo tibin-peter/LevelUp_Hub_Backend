@@ -50,6 +50,7 @@ func (r *repo) GetConnectedMentors(studentID uint) ([]ConnectedMentor, error) {
 	err := r.db.Table("connections c").
 		Select(`
 			mp.id as mentor_profile_id,
+			u.id as mentor_user_id,
 			u.name,
 			mp.profile_pic_url,
 			mp.category,

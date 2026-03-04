@@ -49,6 +49,7 @@ func (r *repo) GetDetailedByStudent(studentID uint) ([]FavoriteResponse, error) 
 	err := r.db.Table("favorites f").
 		Select(`
 			mp.id as mentor_profile_id,
+			u.id as mentor_user_id,
 			u.name,
 			mp.profile_pic_url,
 			mp.category,

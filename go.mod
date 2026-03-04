@@ -1,6 +1,6 @@
 module LevelUp_Hub_Backend
 
-go 1.25.2
+go 1.24.0
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.11

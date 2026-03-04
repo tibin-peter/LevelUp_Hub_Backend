@@ -23,6 +23,11 @@ func LeadConfig() *Config {
 		log.Println("No env file found")
 	}
 
+	dbURL := os.Getenv("DATABASE_URL")
+
+	//production case (neon)
+	if dbURL ==""{
+
 	//loads .env and validate
 	required := []string{
 		"APP_PORT",
@@ -42,7 +47,7 @@ func LeadConfig() *Config {
 		}
 	}
 	//creating dburl
-	dbUrl := fmt.Sprintf(
+	dbURL = fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
@@ -50,10 +55,11 @@ func LeadConfig() *Config {
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_PORT"),
 	)
+	}
 	//return the hole struct
 	return &Config{
 		AppPort:   os.Getenv("APP_PORT"),
-		DBUrl:     dbUrl,
+		DBUrl:     dbURL,
 		RedisAddr: os.Getenv("REDIS_ADDR"),
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		RazorpayClient:os.Getenv("RAZORPAY_KEY_ID"),

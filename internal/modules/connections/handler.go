@@ -50,3 +50,21 @@ func (h *Handler) MyStudents(c *fiber.Ctx) error {
 
 	return utils.JSONSucess(c, "connected students", res)
 }
+
+func (h *Handler) CreateConnection(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(uint)
+
+	var req struct {
+		MentorProfileID uint `json:"mentor_profile_id"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return utils.JSONError(c, 400, "invalid body")
+	}
+
+	err := h.service.CreateConnection(userID, req.MentorProfileID)
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+
+	return utils.JSONSucess(c, "connected successfully", nil)
+}

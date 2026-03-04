@@ -1,42 +1,63 @@
 package admindashboard
 
-
 type Service interface {
-	Dashboard(filter string,)(*AdminDashboardDTO,error)
+	Dashboard(filter string) (*AdminDashboardDTO, error)
 }
 
 type service struct {
 	repo Repository
 }
 
-func NewService(r Repository)Service {
+func NewService(r Repository) Service {
 	return &service{repo: r}
 }
 
-func (s *service) Dashboard(filter string,)(*AdminDashboardDTO,error){
+func (s *service) Dashboard(filter string) (*AdminDashboardDTO, error) {
 
-	start,end := getRange(filter)
+	start, end := getRange(filter)
 
-	students,err := s.repo.CountStudents()
-	if err != nil { return nil,err }
+	students, err := s.repo.CountStudents()
+	if err != nil {
+		return nil, err
+	}
 
-	mentors,err := s.repo.CountMentors()
-	if err != nil { return nil,err }
+	mentors, err := s.repo.CountMentors()
+	if err != nil {
+		return nil, err
+	}
 
-	courses,err := s.repo.CountOfCourses()
-	if err != nil { return nil,err }
+	courses, err := s.repo.CountOfCourses()
+	if err != nil {
+		return nil, err
+	}
 
-	revenue,err := s.repo.TotalPlatformRevenue(start,end)
-	if err != nil { return nil,err }
+	enrollments, err := s.repo.CountEnrollments()
+	if err != nil {
+		return nil, err
+	}
 
-	chart,err := s.repo.RevenueChart(start,end,filter)
-	if err != nil { return nil,err }
+	revenue, err := s.repo.TotalPlatformRevenue(start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	chart, err := s.repo.RevenueChart(start, end, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	activities, err := s.repo.GetRecentActivities()
+	if err != nil {
+		return nil, err
+	}
 
 	return &AdminDashboardDTO{
-		TotalStudents: students,
-		TotalMentors: mentors,
-		ActiveCourses: courses,
-		TotalRevenue: revenue,
-		RevenueChart: chart,
-	},nil
+		TotalStudents:    students,
+		TotalMentors:     mentors,
+		ActiveCourses:    courses,
+		TotalRevenue:     revenue,
+		TotalEnrollments: enrollments,
+		RevenueChart:     chart,
+		RecentActivities: activities,
+	}, nil
 }

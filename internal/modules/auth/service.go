@@ -106,6 +106,7 @@ func (s *service) Register(name, email, password, role, inputOTP string) (string
 		Password:   hash,
 		Role:       role,
 		IsVerified: true,
+		ProfilePicURL:"https://api.dicebear.com/9.x/lorelei/svg",
 	}
 	//save user
 	if err := s.repo.CreateUser(&newUser); err != nil {

@@ -15,7 +15,16 @@ type Service interface {
 	CreditWallet(userID uint, amount float64, txnType string, refID uint) error
 	ReleaseEscrow(bookingID uint) error
 	RefundEscrow(bookingID uint) error
-	// CleanupStaleBookings()
+	GetMentorWithdrawals(mentorID uint) ([]WithdrawRequest, error)
+
+	// Admin
+	GetAdminPaymentLedger(search, status string) ([]AdminPaymentSummary, error)
+	GetAdminPaymentOverview() (*AdminPaymentOverview, error)
+	GetAdminWalletOverview() (*AdminWalletOverview, error)
+	GetAdminWalletTransactions() ([]WalletTransaction, error)
+	GetAdminWithdrawals() ([]WithdrawRequest, error)
+	ApproveWithdrawal(id uint) error
+	RejectWithdrawal(id uint) error
 }
 
 type service struct {
@@ -72,7 +81,7 @@ func (s *service) CreateOrder(studentID uint, bookingID uint) (*CreateOrderResul
 	p := &Payment{
 		BookingID:       booking.ID,
 		StudentID:       studentID,
-		MentorID:        booking.MentorID,
+		MentorProfileID: booking.MentorID,
 		MentorUserID:    booking.MentorUserID,
 		Amount:          amount,
 		Currency:        "INR",
@@ -106,6 +115,10 @@ func (s *service) VerifyRequest(studentID uint, req VerifyRequest) error {
 		return errors.New("payment not found")
 	}
 
+	if payment.Status == PaymentPaid {
+		return nil
+	}
+
 	payment.Status = "paid"
 	payment.RazorpayPaymentID = string(req.PaymentID)
 	payment.PaidAt = time.Now()
@@ -127,8 +140,8 @@ func (s *service) GetStudentPayment(studentID uint) ([]PaymentSummary, error) {
 }
 
 type MentorEarningsResult struct {
-	Balance float64
-	History []WalletTransaction
+	Balance float64             `json:"balance"`
+	History []WalletTransaction `json:"history"`
 }
 
 func (s *service) GetMentorEarnings(mentorID uint) (*MentorEarningsResult, error) {
@@ -148,6 +161,22 @@ func (s *service) GetMentorEarnings(mentorID uint) (*MentorEarningsResult, error
 		return nil, err
 	}
 
+	// Populate Currency and MentorName for each transaction from the associated booking payment
+	for i := range history {
+		if history[i].Source == "booking" && history[i].ReferenceID > 0 {
+			p, err := s.repo.GetByBookingID(history[i].ReferenceID)
+			if err == nil && p != nil {
+				history[i].Currency = p.Currency
+				history[i].MentorName = "Session Earning"
+			}
+		} else if history[i].Type == "mentor_payout" || history[i].Type == "withdraw" {
+			history[i].Currency = "INR"
+			history[i].MentorName = "Withdrawal"
+		} else {
+			history[i].Currency = "INR"
+		}
+	}
+
 	return &MentorEarningsResult{
 		Balance: balance,
 		History: history,
@@ -155,7 +184,6 @@ func (s *service) GetMentorEarnings(mentorID uint) (*MentorEarningsResult, error
 }
 
 // for withdrawal
-
 func (s *service) RequestWithdraw(mentorID uint, amount float64) error {
 
 	if amount <= 0 {
@@ -190,8 +218,11 @@ func (s *service) RequestWithdraw(mentorID uint, amount float64) error {
 	return nil
 }
 
-//// helper for credit balance into mentor and admin
+func (s *service) GetMentorWithdrawals(mentorID uint) ([]WithdrawRequest, error) {
+	return s.repo.ListWithdrawalsByMentor(mentorID)
+}
 
+//// helper for credit balance into mentor and admin
 func (s *service) CreditWallet(userID uint, amount float64, txnType string, refID uint) error {
 
 	wallet, err := s.repo.GetWalletByUserID(userID)
@@ -227,28 +258,35 @@ func (s *service) CreditWallet(userID uint, amount float64, txnType string, refI
 }
 
 func (s *service) ReleaseEscrow(bookingID uint) error {
-
 	payment, err := s.repo.GetByBookingID(bookingID)
 	if err != nil {
 		return err
 	}
 
+	if payment.Status == PaymentReleased {
+		return nil // Idempotent
+	}
+
 	if payment.Status != PaymentPaid {
-		return errors.New("not in escrow")
+		return errors.New("not in escrow or already processed")
 	}
 
 	total := float64(payment.Amount) / 100
-
 	adminShare := total * 0.10
 	mentorShare := total - adminShare
 
-	// credit mentor
-	if err := s.CreditWallet(payment.MentorUserID, mentorShare, "earning", bookingID); err != nil {
+	// 1. Credit Admin Wallet with Full Amount
+	if err := s.CreditWallet(AdminUserID, total, "booking_received", bookingID); err != nil {
 		return err
 	}
 
-	// credit admin (example userID=1)
-	if err := s.CreditWallet(1, adminShare, "commission", bookingID); err != nil {
+	// Credit Mentor
+	if err := s.CreditWallet(payment.MentorUserID, mentorShare, "session_earning", bookingID); err != nil {
+		return err
+	}
+
+	// Record the deduction in Admin Wallet (Debit)
+	if err := s.CreditWallet(AdminUserID, -mentorShare, "mentor_payout", bookingID); err != nil {
 		return err
 	}
 
@@ -263,11 +301,10 @@ func (s *service) RefundEscrow(bookingID uint) error {
 		return err
 	}
 
-	// if err := s.rzp.Refund(payment.RazorpayPaymentID); err != nil {
-	// 	return err
-	// }
+	if err := s.rzp.Refund(payment.RazorpayPaymentID); err != nil {
+		return err
+	}
 
-	// Rule 5: Refund to Student Wallet (Better than Bank Transfer for speed)
 	amount := float64(payment.Amount) / 100
 	err = s.CreditWallet(payment.StudentID, amount, "refund", bookingID)
 	if err != nil {
@@ -278,31 +315,64 @@ func (s *service) RefundEscrow(bookingID uint) error {
 	return s.repo.UpdatePayment(payment)
 }
 
-// func (s *service) CleanupStaleBookings() {
-// 	// Case 1: Release slots where student started payment but never finished
-// 	expiryTime := time.Now().Add(-15 * time.Minute)
-// 	staleBookings, _ := s.repo.GetStalePendingBookings(expiryTime)
+// Admin Operations
 
-// 	for _, b := range staleBookings {
-// 		fmt.Printf("[CLEANUP] Booking %d timed out. Freeing slot %d\n", b.ID, b.SlotID)
-// 		s.booking.UpdateStatus(b.ID, "expired")
-// 		s.booking.FreeSlot(b.SlotID)
-// 	}
+func (s *service) GetAdminPaymentLedger(search, status string) ([]AdminPaymentSummary, error) {
+	return s.repo.ListAllPayments(search, status)
+}
 
-// 	// Case 2: Auto-Refund if Mentor ignored the request and session start time passed
-// 	missedBookings, _ := s.repo.GetUnapprovedPastBookings(time.Now())
+func (s *service) GetAdminPaymentOverview() (*AdminPaymentOverview, error) {
+	return s.repo.GetAdminPaymentOverview()
+}
 
-// 	for _, b := range missedBookings {
-// 		fmt.Printf("[CLEANUP] Mentor missed booking %d. Triggering auto-refund.\n", b.ID)
+func (s *service) GetAdminWalletOverview() (*AdminWalletOverview, error) {
+	return s.repo.GetAdminWalletOverview()
+}
 
-// 		s.booking.UpdateStatus(b.ID, "mentor_missed")
+func (s *service) GetAdminWalletTransactions() ([]WalletTransaction, error) {
+	return s.repo.ListWalletTransactionByUser(AdminUserID)
+}
 
-// 		err := s.RefundEscrow(b.ID)
-// 		if err != nil {
-// 			fmt.Printf("[ERROR] Auto-refund failed for booking %d: %v\n", b.ID, err)
-// 			continue
-// 		}
+func (s *service) GetAdminWithdrawals() ([]WithdrawRequest, error) {
+	return s.repo.ListAllWithdraws()
+}
 
-// 		s.booking.FreeSlot(b.SlotID)
-// 	}
-// }
+func (s *service) ApproveWithdrawal(id uint) error {
+	req, err := s.repo.GetWithdrawByID(id)
+	if err != nil {
+		return err
+	}
+
+	if req.Status != "pending" {
+		return errors.New("request already processed")
+	}
+
+	req.Status = "approved"
+	req.ProcessedAt = time.Now()
+	return s.repo.UpdateWithdraw(req)
+}
+
+func (s *service) RejectWithdrawal(id uint) error {
+	req, err := s.repo.GetWithdrawByID(id)
+	if err != nil {
+		return err
+	}
+
+	if req.Status != "pending" {
+		return errors.New("request already processed")
+	}
+
+	// Refund Mentor Wallet since we deducted it during RequestWithdraw
+	wallet, err := s.repo.GetWalletByUserID(req.MentorID)
+	if err != nil {
+		return err
+	}
+	wallet.Balance += req.Amount
+	if err := s.repo.UpdateWallet(wallet); err != nil {
+		return err
+	}
+
+	req.Status = "rejected"
+	req.ProcessedAt = time.Now()
+	return s.repo.UpdateWithdraw(req)
+}

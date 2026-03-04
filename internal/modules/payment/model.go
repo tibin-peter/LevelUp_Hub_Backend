@@ -5,14 +5,23 @@ import (
 	"time"
 )
 
+// const (
+// 	PaymentCreated  = "created"
+// 	PaymentPaid     = "paid"
+// 	PaymentReleased = "released"
+// 	PaymentRefunded = "refunded"
+
+// 	AdminUserID = 1
+// )
+
 type Payment struct {
 	ID        uint `gorm:"primaryKey"`
 	BookingID uint
 
 	StudentID uint
 
-	MentorID     uint
-	MentorUserID uint
+	MentorProfileID uint
+	MentorUserID    uint
 
 	Amount   int64
 	Currency string
@@ -27,49 +36,52 @@ type Payment struct {
 }
 
 type PaymentSummary struct {
-	ID         uint
-	Amount     int64
-	Currency   string
-	Status     string
-	MentorName string
-	CreatedAt  time.Time
+	ID         uint      `json:"id"`
+	Amount     int64     `json:"amount"`
+	Currency   string    `json:"currency"`
+	Status     string    `json:"status"`
+	MentorName string    `json:"mentor_name"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type Wallet struct {
-	ID uint `gorm:"primaryKey"`
+	ID uint `gorm:"primaryKey" json:"id"`
 
-	UserID uint         `gorm:"uniqueIndex"`
-	User   profile.User `gorm:"foreignKey:UserID"`
+	UserID uint         `gorm:"uniqueIndex" json:"user_id"`
+	User   profile.User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 
-	Balance   float64
-	UpdatedAt time.Time
+	Balance   float64   `json:"balance"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type WalletTransaction struct {
-	ID uint `gorm:"primaryKey"`
+	ID uint `gorm:"primaryKey" json:"id"`
 
-	UserID uint
-	User   profile.User `gorm:"foreignKey:UserID"`
+	UserID uint         `json:"user_id"`
+	User   profile.User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 
-	Amount float64
-	Type   string
-	Source string
+	Amount float64 `json:"amount"`
+	Type   string  `json:"type"`
+	Source string  `json:"source"`
 
-	ReferenceID uint
+	ReferenceID uint `json:"reference_id"`
 
-	CreatedAt time.Time
+	// Extra fields for frontend display
+	Currency   string    `json:"currency" gorm:"-"`
+	MentorName string    `json:"mentor_name" gorm:"-"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type WithdrawRequest struct {
-	ID       uint `gorm:"primaryKey"`
-	MentorID uint
-	Mentor   profile.User `gorm:"foreignKey:MentorID"`
+	ID       uint `gorm:"primaryKey" json:"id"`
+	MentorID uint `json:"mentor_id"`
+	Mentor   profile.User `gorm:"foreignKey:MentorID" json:"mentor,omitempty"`
 
-	Amount float64
-	Status string
+	Amount float64 `json:"amount"`
+	Status string  `json:"status"`
 
-	RequestedAt time.Time
-	ProcessedAt time.Time
+	RequestedAt time.Time `json:"requested_at"`
+	ProcessedAt time.Time `json:"processed_at"`
 }
 
 // verify payment
@@ -77,4 +89,31 @@ type VerifyRequest struct {
 	OrderID   string `json:"order_id"`
 	PaymentID string `json:"payment_id"`
 	Signature string `json:"signature"`
+}
+type AdminPaymentSummary struct {
+	ID              uint      `json:"id"`
+	BookingID       uint      `json:"booking_id"`
+	Amount          int64     `json:"amount"`
+	Currency        string    `json:"currency"`
+	Status          string    `json:"status"`
+	MentorName      string    `json:"mentor_name"`
+	StudentName     string    `json:"student_name"`
+	RazorpayOrderID string    `json:"razorpay_order_id"`
+	CreatedAt       time.Time `json:"created_at"`
+	PaidAt          time.Time `json:"paid_at"`
+}
+
+type AdminPaymentOverview struct {
+	TotalRevenue    float64 `json:"total_revenue"`
+	EscrowHolding   float64 `json:"escrow_holding"`
+	TotalRefunded   float64 `json:"total_refunded"`
+	TotalReleased   float64 `json:"total_released"`
+	PendingWithdraw float64 `json:"pending_withdraw"`
+}
+
+type AdminWalletOverview struct {
+	CurrentBalance     float64 `json:"current_balance"`
+	CommissionEarned   float64 `json:"commission_earned"`
+	TotalMentorPayouts float64 `json:"total_mentor_payouts"`
+	TotalRefundsGiven  float64 `json:"total_refunds_given"`
 }

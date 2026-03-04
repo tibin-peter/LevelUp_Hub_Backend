@@ -2,16 +2,14 @@ package seed
 
 import (
 	"LevelUp_Hub_Backend/internal/modules/rbac"
-
 	"gorm.io/gorm"
 )
 
 var defaultPermissions = []rbac.Permission{
-  
-	//student
-
+	// Student
 	{Slug: "dashboard", Name: "Dashboard"},
-	{Slug: "connected_mentors", Name: "Connected Mentors"},
+	{Slug: "explore_mentors", Name: "Explore Mentors"},
+	{Slug: "mentors", Name: "Connected Mentors"},
 	{Slug: "courses", Name: "Courses"},
 	{Slug: "bookings", Name: "Bookings"},
 	{Slug: "messages", Name: "Messages"},
@@ -19,7 +17,6 @@ var defaultPermissions = []rbac.Permission{
 	{Slug: "settings", Name: "Settings"},
 
 	// Mentor
-	{Slug: "dashboard", Name: "Dashboard"},
 	{Slug: "explore_courses", Name: "Explore Courses"},
 	{Slug: "my_courses", Name: "My Courses"},
 	{Slug: "sessions", Name: "Sessions"},
@@ -28,7 +25,7 @@ var defaultPermissions = []rbac.Permission{
 
 	// Admin
 	{Slug: "students", Name: "Students"},
-	{Slug: "mentors", Name: "Mentors"},
+	{Slug: "admin_mentors", Name: "Mentors"},
 	{Slug: "mentor_approvals", Name: "Mentor Approvals"},
 	{Slug: "complaints", Name: "Complaints"},
 	{Slug: "wallet", Name: "Wallet"},
@@ -36,37 +33,40 @@ var defaultPermissions = []rbac.Permission{
 }
 
 func SeedPermissions(db *gorm.DB) error {
-
 	for _, p := range defaultPermissions {
-
-		if err := db.
-			Where("slug = ?", p.Slug).
-			FirstOrCreate(&rbac.Permission{}, p).Error; err != nil {
+		if err := db.Where("slug = ?", p.Slug).FirstOrCreate(&rbac.Permission{}, p).Error; err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
-func SeedAdminPermissions(db *gorm.DB) error {
-
+func SeedRolePermissions(db *gorm.DB) error {
+	// 1. Admin gets all
 	var admin rbac.Role
-	if err := db.
-		Where("name = ?", "admin").
-		First(&admin).Error; err != nil {
-		return err
+	if err := db.Where("name = ?", "admin").First(&admin).Error; err == nil {
+		var all []rbac.Permission
+		db.Find(&all)
+		db.Model(&admin).Association("Permissions").Replace(&all)
 	}
 
-	var perms []rbac.Permission
-	if err := db.Find(&perms).Error; err != nil {
-	return err
-}
+	// 2. Student Permissions
+	var student rbac.Role
+	if err := db.Where("name = ?", "student").First(&student).Error; err == nil {
+		slugs := []string{"dashboard", "explore_mentors", "mentors", "courses", "bookings", "messages", "payments", "settings"}
+		var perms []rbac.Permission
+		db.Where("slug IN ?", slugs).Find(&perms)
+		db.Model(&student).Association("Permissions").Replace(&perms)
+	}
 
-	// attach all permissions
-	return db.
-		Model(&admin).
-		Association("Permissions").
-		Append(&perms)
-		// Replace(&perms)
+	// 3. Mentor Permissions
+	var mentor rbac.Role
+	if err := db.Where("name = ?", "mentor").First(&mentor).Error; err == nil {
+		slugs := []string{"dashboard", "explore_courses", "my_courses", "sessions", "earnings", "messages", "booking_requests", "settings"}
+		var perms []rbac.Permission
+		db.Where("slug IN ?", slugs).Find(&perms)
+		db.Model(&mentor).Association("Permissions").Replace(&perms)
+	}
+
+	return nil
 }

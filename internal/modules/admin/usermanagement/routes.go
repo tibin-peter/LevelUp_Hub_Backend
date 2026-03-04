@@ -24,6 +24,8 @@ func RegisterRoutes(app fiber.Router, db *gorm.DB, jwtSecret string) {
 	// users
 	admin.Get("/students",handler.Students)
 	admin.Get("/mentors",handler.Mentors)
+	admin.Get("/users", handler.ListAllUsers)
+	admin.Post("/users", handler.CreateUser)
 	admin.Patch("/users/:id/block",handler.BlockUser)
 	admin.Patch("/users/:id/unblock",handler.UnblockUser)
 

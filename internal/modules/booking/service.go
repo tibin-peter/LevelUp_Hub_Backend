@@ -22,6 +22,7 @@ type Service interface {
 	FreeSlot(slotID uint) error
 	SetPaymentPort(p PaymentPort)
 
+	GetMentorRequests(userID uint) ([]BookingResponseDTO, error)
 	ApproveBooking(bookingID, mentorUserID uint) error
 	RejectBooking(bookingID, mentorUserID uint) error
 	GetMentorUpcoming(userID uint) ([]BookingResponseDTO, error)
@@ -30,6 +31,7 @@ type Service interface {
 
 	GetStudentBookings(studentID uint) ([]Booking, error)
 	GetMentorBookings(mentorUserID uint) ([]Booking, error)
+	MarkCompleted(bookingID uint) error
 }
 
 type service struct {
@@ -40,7 +42,7 @@ type service struct {
 	paymentSvc PaymentPort
 }
 
-func NewService(repo Repository, s slot.Repository, m profile.MentorRepository,connection connections.Service, pay PaymentPort) Service {
+func NewService(repo Repository, s slot.Repository, m profile.MentorRepository, connection connections.Service, pay PaymentPort) Service {
 	return &service{
 		repo:       repo,
 		slotrepo:   s,
@@ -66,17 +68,17 @@ func (s *service) CreateBooking(studentID, slotID uint) (*Booking, error) { // R
 	}
 
 	// Industry Standard 1: Minimum 1-hour slot check (if not already enforced in slot creation)
-	duration := slotData.EndTime.Sub(slotData.StartTime)
-	if duration < time.Hour {
-		return nil, errors.New("mentorship sessions must be at least 1 hour")
-	}
+	// duration := slotData.EndTime.Sub(slotData.StartTime)
+	// if duration < time.Hour {
+	// 	return nil, errors.New("mentorship sessions must be at least 1 hour")
+	// }
 
-	// Industry Standard 2: Prevent booking slots that start too soon
-	if time.Until(slotData.StartTime) < time.Hour {
-		return nil, errors.New("cannot book a session starting in less than 1 hour")
-	}
+	//Industry Standard 2: Prevent booking slots that start too soon
+	// if time.Until(slotData.StartTime) < time.Hour {
+	// 	return nil, errors.New("cannot book a session starting in less than 1 hour")
+	// }
 
-	// 2. Check if this student (or anyone) already has a pending booking for this slot
+	// 2. Check if this student already has a pending booking for this slot
 	existing, _ := s.repo.GetBySlotID(slotID)
 	if existing != nil {
 		if existing.Status == "pending_payment" && existing.StudentID == studentID {
@@ -101,7 +103,23 @@ func (s *service) CreateBooking(studentID, slotID uint) (*Booking, error) { // R
 	}
 
 	err = s.repo.Create(&booking)
+
+	// lock slot immediately
+  if err:= s.slotrepo.MarkBooked(slotID, true);err!=nil{
+		return nil,err
+	}
+
 	return &booking, err
+}
+
+func (s *service) GetMentorRequests(userID uint) ([]BookingResponseDTO, error) {
+
+	mpID, err := s.slotrepo.GetProfileIDByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.repo.GetRequestsByMentor(mpID)
 }
 
 // approve booking by mentor
@@ -126,7 +144,12 @@ func (s *service) ApproveBooking(bookingID, mentorUserID uint) error {
 		return err
 	}
 
-	return s.paymentSvc.ReleaseEscrow(bookingID)
+	// creating the connection wiht student and mentor
+	if err := s.connection.CreateConnection(booking.StudentID, booking.MentorProfileID); err != nil {
+		log.Printf("failed to create connection: %v", err)
+	}
+
+	return nil
 }
 
 // reject booking by mentor
@@ -136,6 +159,10 @@ func (s *service) RejectBooking(bookingID, mentorUserID uint) error {
 	if err != nil {
 		return err
 	}
+
+	if booking.Status != "paid" {
+    return errors.New("only paid bookings can be rejected")
+}
 
 	mentorProfileID, _ := s.slotrepo.GetProfileIDByUserID(mentorUserID)
 
@@ -164,7 +191,7 @@ func (s *service) CancelBooking(bookingID, studentID uint) error {
 		return errors.New("not your booking")
 	}
 
-	if booking.Status == "confirmed" {
+	if booking.Status == "confirmed" || booking.Status == "paid" {
 		slot, _ := s.slotrepo.GetByID(booking.SlotID)
 		// Rule 7: Only allow cancellation 1 hour before start
 		if time.Until(slot.StartTime) < time.Hour {
@@ -247,8 +274,7 @@ func (s *service) CheckAndCompletePastSessions(mentorProfileID uint) error {
 			// If session end time is in the past
 			if slot.EndTime.Before(time.Now()) {
 				log.Printf("[DEBUG] Completing past session: Booking %d", b.ID)
-				s.repo.UpdateStatus(b.ID, "completed")
-				s.paymentSvc.ReleaseEscrow(b.ID)
+				s.MarkCompleted(b.ID)
 			}
 		}
 	}
@@ -278,6 +304,12 @@ func (s *service) MarkBookingPaid(bookingID uint) error {
 	if err := s.repo.UpdateStatus(bookingID, "paid"); err != nil {
 		return err
 	}
+
+	// creating the connection wiht student and mentor early
+	if err := s.connection.CreateConnection(booking.StudentID, booking.MentorProfileID); err != nil {
+		log.Printf("failed to create connection during payment: %v", err)
+	}
+
 	// lock slot
 	return s.slotrepo.MarkBooked(booking.SlotID, true)
 }
@@ -297,6 +329,7 @@ func (s *service) GetBookingByID(id uint) (payment.BookingDTO, error) {
 	return payment.BookingDTO{
 		ID:           b.ID,
 		StudentID:    b.StudentID,
+		MentorID:     b.MentorProfileID,
 		MentorUserID: mentor.UserID,
 		Price:        b.Price,
 		Status:       b.Status,
@@ -309,6 +342,10 @@ func (s *service) MarkCompleted(bookingID uint) error {
 	if err != nil {
 		return err
 	}
+
+	if booking.Status != "confirmed" {
+   return errors.New("only confirmed booking can be completed")
+}
 
 	// update status
 	if err := s.repo.UpdateStatus(bookingID, "completed"); err != nil {
@@ -324,5 +361,5 @@ func (s *service) MarkCompleted(bookingID uint) error {
 		return err
 	}
 
-	return nil
+	return s.paymentSvc.ReleaseEscrow(bookingID)
 }

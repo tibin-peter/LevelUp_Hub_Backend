@@ -2,6 +2,8 @@ package payment
 
 import (
 	"LevelUp_Hub_Backend/internal/utils"
+	"log"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,7 +17,6 @@ func NewHandler(s Service) *Handler {
 }
 
 //create order
-
 type CreateOrderRequest struct {
 	BookingID uint `json:"booking_id"`
 }
@@ -28,6 +29,7 @@ func (h *Handler) CreateOrder(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return utils.JSONError(c, 400, "invalid body")
 	}
+	log.Println("payment created")
 
 	res, err := h.service.CreateOrder(
 		userID,
@@ -41,7 +43,6 @@ func (h *Handler) CreateOrder(c *fiber.Ctx) error {
 }
 
 //verify payment
-
 func (h *Handler) VerifyPayment(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID").(uint)
@@ -61,9 +62,7 @@ func (h *Handler) VerifyPayment(c *fiber.Ctx) error {
 	return utils.JSONSucess(c, "payment verified", nil)
 }
 
-
 //student payments
-
 func (h *Handler) GetStudentPayments(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID").(uint)
@@ -77,7 +76,6 @@ func (h *Handler) GetStudentPayments(c *fiber.Ctx) error {
 }
 
 //mentor earnings
-
 func (h *Handler) GetMentorEarnings(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID").(uint)
@@ -91,7 +89,6 @@ func (h *Handler) GetMentorEarnings(c *fiber.Ctx) error {
 }
 
 //withdraw request
-
 type WithdrawRequestDTO struct {
 	Amount float64 `json:"amount"`
 }
@@ -115,30 +112,71 @@ func (h *Handler) RequestWithdraw(c *fiber.Ctx) error {
 	return utils.JSONSucess(c, "withdraw request submitted", nil)
 }
 
+func (h *Handler) GetMentorWithdrawals(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(uint)
+	data, err := h.service.GetMentorWithdrawals(userID)
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched withdrawals", data)
+}
 
-// //admin list withdraws
+// Admin handlers
 
-// func (h *Handler) ListWithdrawRequests(c *fiber.Ctx) error {
+func (h *Handler) AdminGetLedger(c *fiber.Ctx) error {
+	search := c.Query("search", "")
+	status := c.Query("status", "")
+	data, err := h.service.GetAdminPaymentLedger(search, status)
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched ledger", data)
+}
 
-// 	list, err := h.service.ListWithdrawRequests()
-// 	if err != nil {
-// 		return utils.JSONError(c, 500, err.Error())
-// 	}
+func (h *Handler) AdminGetPaymentOverview(c *fiber.Ctx) error {
+	data, err := h.service.GetAdminPaymentOverview()
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched summary", data)
+}
 
-// 	return utils.JSONSucess(c, "fetched", list)
-// }
+func (h *Handler) AdminGetWalletOverview(c *fiber.Ctx) error {
+	data, err := h.service.GetAdminWalletOverview()
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched wallet summary", data)
+}
 
+func (h *Handler) AdminGetWalletTransactions(c *fiber.Ctx) error {
+	data, err := h.service.GetAdminWalletTransactions()
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched transactions", data)
+}
 
-// //admin approve withdraw
+func (h *Handler) AdminGetWithdrawals(c *fiber.Ctx) error {
+	data, err := h.service.GetAdminWithdrawals()
+	if err != nil {
+		return utils.JSONError(c, 500, err.Error())
+	}
+	return utils.JSONSucess(c, "fetched withdrawals", data)
+}
 
-// func (h *Handler) ApproveWithdraw(c *fiber.Ctx) error {
+func (h *Handler) AdminApproveWithdrawal(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	if err := h.service.ApproveWithdrawal(uint(id)); err != nil {
+		return utils.JSONError(c, 400, err.Error())
+	}
+	return utils.JSONSucess(c, "withdrawal approved", nil)
+}
 
-// 	idParam := c.Params("id")
-// 	id, _ := strconv.Atoi(idParam)
-
-// 	if err := h.service.ApproveWithdraw(uint(id)); err != nil {
-// 		return utils.JSONError(c, 400, err.Error())
-// 	}
-
-// 	return utils.JSONSucess(c, "withdraw approved", nil)
-// }
+func (h *Handler) AdminRejectWithdrawal(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	if err := h.service.RejectWithdrawal(uint(id)); err != nil {
+		return utils.JSONError(c, 400, err.Error())
+	}
+	return utils.JSONSucess(c, "withdrawal rejected", nil)
+}

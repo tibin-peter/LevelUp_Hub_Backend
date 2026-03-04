@@ -1,23 +1,13 @@
 package seed
 
 import (
-	"LevelUp_Hub_Backend/internal/config"
 	"LevelUp_Hub_Backend/internal/modules/profile"
-	"LevelUp_Hub_Backend/internal/platform/postgres"
 	"LevelUp_Hub_Backend/internal/utils"
 	"fmt"
-	"log"
+	"gorm.io/gorm"
 )
 
-func Addadmin() {
-  //Load config
-	cfg := config.LeadConfig()
-
-	//Connect postgres
-	db,err:=postgres.NewPostgresConnection(cfg)
-	if err !=nil{
-		log.Fatal("Postgres connection failed:",err)
-	}
+func Addadmin(db *gorm.DB) {
 
   password := "admin123"
 

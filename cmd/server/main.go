@@ -29,19 +29,20 @@ func main() {
 	cfg := config.LeadConfig()
 
 	//Connect postgres
-	db,err:=postgres.NewPostgresConnection(cfg)
-	if err !=nil{
-		log.Fatal("Postgres connection failed:",err)
+	db, err := postgres.NewPostgresConnection(cfg)
+	if err != nil {
+		log.Fatal("Postgres connection failed:", err)
 	}
-	
+
 	//for seed
+	seed.Addadmin(db)
 	seed.SeedRoles(db)
 	seed.SeedPermissions(db)
-	seed.SeedAdminPermissions(db)
-
+	seed.SeedRolePermissions(db)
+	seed.SeedCourses(db)
 
 	//run migrations
-	if err:=db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&profile.User{},
 		&profile.MentorProfile{},
 		&courses.Course{},
@@ -61,7 +62,7 @@ func main() {
 		//rbac
 		&rbac.Role{},
 		&rbac.Permission{},
-	);err!=nil{
+	); err != nil {
 		log.Fatal(err)
 	}
 
@@ -77,14 +78,14 @@ func main() {
 
 	//for frontend connect
 	app.Use(cors.New(cors.Config{
-    AllowOrigins: "http://localhost:5173",
-    AllowMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-    AllowHeaders: "Origin, Content-Type, Accept,Authorization",
-    AllowCredentials: true,
-}))
+		AllowOrigins:     "http://localhost:5173",
+		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept,Authorization",
+		AllowCredentials: true,
+	}))
 
 	//setup routes
-	routes.SetUp(app,db,rdb,cfg.JWTSecret,cfg.RazorpayClient,cfg.RazorpayKey)
+	routes.SetUp(app, db, rdb, cfg.JWTSecret, cfg.RazorpayClient, cfg.RazorpayKey)
 
 	// Health check route
 	app.Get("/", func(c *fiber.Ctx) error {

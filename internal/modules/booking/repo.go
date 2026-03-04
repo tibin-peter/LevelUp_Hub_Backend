@@ -23,6 +23,7 @@ type Repository interface {
 	GetUpcomingByStudent(studentID uint) ([]BookingResponseDTO, error)
 	GetHistoryByStudent(studentID uint) ([]BookingResponseDTO, error)
 
+	GetRequestsByMentor(mid uint) ([]BookingResponseDTO, error) 
 	GetUpcomingByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
 	GetHistoryByMentor(mentorProfileID uint) ([]BookingResponseDTO, error)
 
@@ -122,7 +123,6 @@ func (r *repo) GetUpcomingByStudent(studentID uint) ([]BookingResponseDTO, error
 		`, studentID).
 		Order("ms.start_time ASC").
 		Scan(&list).Error
-	fmt.Println("repo data:", list)
 
 	return list, err
 }
@@ -154,6 +154,34 @@ func (r *repo) GetHistoryByStudent(studentID uint) ([]BookingResponseDTO, error)
 			)
 		`, studentID).
 		Order("ms.start_time DESC").
+		Scan(&list).Error
+
+	return list, err
+}
+
+func (r *repo) GetRequestsByMentor(mid uint) ([]BookingResponseDTO, error) {
+
+	var list []BookingResponseDTO
+
+	err := r.db.Table("bookings").
+		Select(`
+			bookings.id as booking_id,
+			s.name as student_name,
+			mu.name as mentor_name,
+			ms.start_time,
+			ms.end_time,
+			bookings.price,
+			bookings.status
+		`).
+		Joins("JOIN users s ON s.id = bookings.student_id").
+		Joins("JOIN mentor_profiles mp ON mp.id = bookings.mentor_profile_id").
+		Joins("JOIN users mu ON mu.id = mp.user_id").
+		Joins("JOIN mentor_slots ms ON ms.id = bookings.slot_id").
+		Where(`
+			bookings.mentor_profile_id = ?
+			AND bookings.status = 'paid'
+		`, mid).
+		Order("ms.start_time ASC").
 		Scan(&list).Error
 
 	return list, err
@@ -237,7 +265,7 @@ func (r *repo) CountRequests(profileID uint,) (int64,error){
 	var count int64
 
 	err := r.db.Model(&Booking{}).
-		Where("mentor_profile_id=? AND status='pending'", profileID).
+		Where("mentor_profile_id=? AND status='paid'", profileID).
 		Count(&count).Error
 
 	return count,err

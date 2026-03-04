@@ -11,9 +11,9 @@ type User struct {
 	Role          string `gorm:"not null"`
 	IsVerified    bool
 	IsBlocked     bool
-	ProfilePicURL string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ProfilePicURL string    `json:"profile_pic_url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 //OTP model
@@ -29,8 +29,8 @@ type MentorProfile struct {
 	ID              uint    `gorm:"primaryKey"`
 	UserID          uint    `gorm:"uniqueIndex;not null"`
 	Status          string  `gorm:"default:pending"`
-	ProfilePicURL   string  `gorm:"type:text"`
-	Bio             string  `gorm:"type:text"`
+	ProfilePicURL   string  `gorm:"type:text" json:"profile_pic_url"`
+	Bio             string  `gorm:"type:text" json:"bio"`
 	Category        string  `json:"category"`
 	SubCategory     string  `json:"sub_category"`
 	Skills          string  `gorm:"type:text"`

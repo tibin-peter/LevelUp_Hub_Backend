@@ -14,7 +14,7 @@ import (
 
 type RazorpayClient interface {
 	CreateOrder(amount int64, currency, receipt string) (*RazorpayOrder, error)
-	VerifySignature(orderID string, paymentID string, keyID string) bool
+	VerifySignature(orderID string, paymentID string, signature string) bool
 	Refund(paymentID string) error
 }
 
@@ -71,6 +71,13 @@ func (r *razorpayClient) CreateOrder(
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 300 {
+		var errData map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errData)
+		log.Printf("[RAZORPAY ERROR] Status: %d, Body: %v", resp.StatusCode, errData)
+		return nil, fmt.Errorf("razorpay order creation failed: status %d", resp.StatusCode)
+	}
+
 	var order RazorpayOrder
 	if err := json.NewDecoder(resp.Body).Decode(&order); err != nil {
 		return nil, err
@@ -85,7 +92,7 @@ func (r *razorpayClient) VerifySignature(orderID string, paymentID string, signa
 	// The payload must be orderID + "|" + paymentID
 	payload := fmt.Sprintf("%s|%s", orderID, paymentID)
 
-	h := hmac.New(sha256.New, []byte(r.secret)) 
+	h := hmac.New(sha256.New, []byte(r.secret))
 	h.Write([]byte(payload))
 	expected := hex.EncodeToString(h.Sum(nil))
 
@@ -97,23 +104,23 @@ func (r *razorpayClient) VerifySignature(orderID string, paymentID string, signa
 }
 func (r *razorpayClient) Refund(paymentID string) error {
 
-    url := fmt.Sprintf(
-        "https://api.razorpay.com/v1/payments/%s/refund",
-        paymentID,
-    )
+	url := fmt.Sprintf(
+		"https://api.razorpay.com/v1/payments/%s/refund",
+		paymentID,
+	)
 
-    req, _ := http.NewRequest("POST", url, nil)
-    req.SetBasicAuth(r.key, r.secret)
+	req, _ := http.NewRequest("POST", url, nil)
+	req.SetBasicAuth(r.key, r.secret)
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return err
-    }
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
 
-    if resp.StatusCode >= 300 {
-        return errors.New("refund failed")
-    }
+	if resp.StatusCode >= 300 {
+		return errors.New("refund failed")
+	}
 
-    return nil
+	return nil
 }

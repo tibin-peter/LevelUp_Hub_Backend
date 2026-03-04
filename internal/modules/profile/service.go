@@ -130,6 +130,7 @@ func (s *service) UpdateMentorProfile(userID uint, input MentorProfileInput) (*M
     }
 
     existing.Bio = input.Bio
+    existing.ProfilePicURL = input.ProfilePicURL
     existing.Category = input.Category
     existing.SubCategory = input.SubCategory
     existing.Skills = input.Skills

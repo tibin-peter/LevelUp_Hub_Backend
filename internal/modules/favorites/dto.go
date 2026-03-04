@@ -6,6 +6,7 @@ type AddFavoriteRequest struct {
 
 type FavoriteResponse struct {
 	MentorProfileID uint    `json:"mentor_profile_id"`
+	MentorUserID    uint    `json:"mentor_user_id"`
 	Name            string  `json:"name"`
 	ProfilePicURL   string  `json:"profile_pic_url"`
 	Category        string  `json:"category"`
