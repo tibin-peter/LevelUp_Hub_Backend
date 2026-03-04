@@ -18,6 +18,7 @@ import (
 	"LevelUp_Hub_Backend/internal/platform/redis"
 	"LevelUp_Hub_Backend/internal/routes"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
@@ -92,6 +93,17 @@ func main() {
 		return c.SendString(" LevelUp Hub backend running")
 	})
 
-	log.Println("Server running on port", cfg.AppPort)
-	log.Fatal(app.Listen(":" + cfg.AppPort))
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = cfg.AppPort
+	}
+
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("Server running on port", port)
+
+	log.Fatal(app.Listen(":" + port))
 }
